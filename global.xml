@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<global>
+    <!-- 是否启用控制台 -->
+	<console_log>true</console_log>
+	<debug_log>true</debug_log>
+
+    <!-- redis配置 begin -->
+    <master-name>zxmaster</master-name>
+    <redis-master-ip>192.168.0.8</redis-master-ip>
+    <redis-master-port>6379</redis-master-port>
+    <!--<sentinel-port>26379</sentinel-port>-->
+    <!--<sentinel-ip>192.168.0.8</sentinel-ip>-->
+    <sentinel-port></sentinel-port>
+    <sentinel-ip></sentinel-ip>
+    <!-- 最大空闲连接 -->
+    <jedis-maxidle>20</jedis-maxidle>
+    <!-- 最大连接数 -->
+    <jedis-maxtotal>-1</jedis-maxtotal>
+    <!-- 超时待时间 -->
+    <jedis-maxwait>200</jedis-maxwait>
+    <!-- 10分钟执行 -1为不启用jedispooconfig默认配置1分钟，这里重新指定为10分钟 -->
+    <jedis-timeBetweenEvictionRunsMillis>600000</jedis-timeBetweenEvictionRunsMillis>
+</global>
