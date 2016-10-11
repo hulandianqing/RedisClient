@@ -97,16 +97,11 @@ public class Main extends Application {
         tableView = (TableView) root.lookup("#dataTable");
         /*********暂时隐藏右上tab功能********/
         tableView.setVisible(false);
-        tableView.setPrefHeight(0);
-        tableView.setPrefWidth(0);
-        tableView.setMaxWidth(0);
-        tableView.setMaxHeight(0);
         HBox pane = (HBox) root.lookup("#tabhidden");
-        pane.setVisible(false);
         pane.setMaxHeight(0);
-        pane.setMaxWidth(0);
         pane.setPrefHeight(0);
-        pane.setPrefHeight(0);
+        pane.setMinHeight(0);
+        pane.setVisible(false);
         /********end*********/
         tabPane = (TabPane) root.lookup("#showHashTabPane");
         listView = (ListView<String>) root.lookup("#fieldListView");

@@ -59,7 +59,11 @@ public class MainController {
             value = JedisUtil.getValue(Main.redisId,key,field);
         } catch(Exception e) {
             e.printStackTrace();
-            Main.dialog.show("redis连接异常");
+            if(e.getMessage() != null){
+                Main.dialog.show(e.getMessage());
+            }else{
+                Main.dialog.show("redis连接异常");
+            }
         }
         if(ValidateUtils.isEmpty(field)){
             DesignUtil.refreshShowData(key,null,value);

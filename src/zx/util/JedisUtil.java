@@ -21,6 +21,7 @@ import zx.constant.Constant;
 import zx.design.Main;
 import zx.jedis.JedisFactory;
 import zx.model.TableData;
+import zx.redis.RedisType;
 
 import java.util.*;
 
@@ -163,8 +164,8 @@ public class JedisUtil {
      * 获取当前库key的类型
      * @return
      */
-    public static String getKeyType(String id,String key){
-        return getKeyType(getExecutor(id),key);
+    public static RedisType getKeyType(String id, String key){
+        return RedisType.valueOf(getKeyType(getExecutor(id),key));
     }
 
     /**

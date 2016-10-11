@@ -33,9 +33,9 @@
                </HBox.margin></TreeView>
             <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
                <children>
-                  <HBox fx:id="tabhidden" minWidth="200.0" prefHeight="250.0" prefWidth="598.0" VBox.vgrow="NEVER">
+                  <HBox fx:id="tabhidden" minHeight="0.0" minWidth="0.0" VBox.vgrow="NEVER">
                      <children>
-                        <TableView fx:id="dataTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="300.0" prefWidth="1021.0" HBox.hgrow="ALWAYS">
+                        <TableView fx:id="dataTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
                           <columns>
                               <TableColumn maxWidth="1.7976931348623157E308" prefWidth="74.0" resizable="false" text="TYPE" />
                             <TableColumn maxWidth="284.0" minWidth="200.0" prefWidth="260.0" resizable="false" text="KEY" />
@@ -58,9 +58,9 @@
                         </VBox>
                      </children>
                   </HBox>
-                  <VBox prefHeight="184.0" prefWidth="622.0" spacing="5.0" VBox.vgrow="ALWAYS">
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" VBox.vgrow="ALWAYS">
                      <children>
-                        <HBox alignment="CENTER_LEFT" prefHeight="30.0">
+                        <HBox alignment="CENTER_LEFT">
                            <children>
                               <Label alignment="CENTER" contentDisplay="BOTTOM" text="KEY：" />
                               <TextField fx:id="showKeys" HBox.hgrow="ALWAYS" />
@@ -76,7 +76,7 @@
                               <Insets bottom="5.0" top="5.0" />
                            </VBox.margin>
                         </HBox>
-                        <HBox prefHeight="142.0" prefWidth="622.0" spacing="10.0" VBox.vgrow="ALWAYS">
+                        <HBox spacing="10.0" VBox.vgrow="ALWAYS">
                            <children>
                               <VBox fx:id="showHashField" cacheShape="false" prefHeight="225.0" prefWidth="320.0" spacing="5.0">
                                  <children>
@@ -98,7 +98,8 @@
                                                 </AnchorPane>
                                             </content>
                                           </Tab>
-                                       </tabs></TabPane>
+                                       </tabs>
+                                    </TabPane>
                                  </children>
                                  <HBox.margin>
                                     <Insets right="20.0" />
