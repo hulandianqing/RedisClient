@@ -76,11 +76,6 @@ public class Main extends Application {
      */
     public static RedisDB currentRedisDB;
 
-    /**
-     * 初始宽度
-     */
-    double showHashFieldWidth = 0;
-
     static final String [] TABLECOLUMN = new String[]{"type","key","value"};
 
     public static void main(String[] args) {
@@ -171,10 +166,10 @@ public class Main extends Application {
                             //绑定list数据
                             listView.getItems().addAll(JedisUtil.CURRENTKEYFIELDS.get(tableData.getKey()));
                             //显示hash
-                            showHashUI(true);
+                            DesignUtil.showHashUI(true);
                         }else{
                             //隐藏hash组件
-                            showHashUI(false);
+                            DesignUtil.showHashUI(false);
                             DesignUtil.createTab(tableData.getKey(),tableData.getValue());
                         }
 
@@ -420,30 +415,6 @@ public class Main extends Application {
                 setText(String.valueOf(item));
             }
         }
-    }
-
-    /**
-     * 显示和隐藏hash组件
-     * @param visible
-     */
-    public void showHashUI(boolean visible){
-        VBox showHashField = (VBox) root.lookup("#showHashField");
-        showHashField.setVisible(visible);
-        root.lookup("#showFields").setDisable(!visible);
-        if(!visible){
-            if(showHashFieldWidth == 0){
-                showHashFieldWidth = showHashField.getWidth();
-            }
-            showHashField.setPrefWidth(0);
-            showHashField.setMaxWidth(0);
-        }else{
-            if(showHashFieldWidth != 0){
-//                showHashField.setMinWidth(showHashFieldWidth);
-                showHashField.setMaxWidth(showHashFieldWidth);
-                showHashField.setPrefWidth(showHashFieldWidth);
-            }
-        }
-
     }
 
     class ListCellImpl extends ListCell<String>{

@@ -14,6 +14,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import zx.constant.Constant;
@@ -22,6 +23,7 @@ import zx.jedis.JedisFactory;
 import zx.model.RedisBean;
 import zx.model.RedisDB;
 import zx.model.TableData;
+import zx.redis.RedisType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +37,10 @@ import java.util.List;
  */
 public class DesignUtil {
 
+    /**
+     * 初始宽度
+     */
+    static double showHashFieldWidth = 0;
     /**
      * 刷新tree
      */
@@ -81,16 +87,17 @@ public class DesignUtil {
     /**
      * 刷新下面的数据
      */
-    public static void refreshShowData(String key,ObservableList<String> fields,String value){
+    public static void refreshShowData(TableData tableData){
         clearListView();
         clearTabPane();
-        String text = key;
-        if(!ValidateUtils.isEmpty(fields)){
-            Main.listView.getItems().addAll(fields);
+        String text = tableData.getKey();
+        if(tableData.getType() == RedisType.HASH){
+            Main.listView.getItems().addAll(FXCollections.observableArrayList(tableData.getField()));
             Main.listView.getSelectionModel().select(0);
-            text+="-"+fields.get(0);
+            text+="-"+tableData.getField();
         }
-        createTab(text,value);
+        text += " [" + tableData.getType() + "]";
+        createTab(text,tableData.getValue());
     }
 
     /**
@@ -176,7 +183,6 @@ public class DesignUtil {
             }
         }
         if(tab == null || !isExists){
-            tab = null;
             tab = new Tab();
             tab.setText(text);
             Main.tabPane.getTabs().add(tab);
@@ -297,5 +303,29 @@ public class DesignUtil {
         stage.initModality(modality);
         stage.getIcons().add(Constant.ICONIMG);
         stage.show();
+    }
+
+    /**
+     * 显示和隐藏hash组件
+     * @param visible
+     */
+    public static void showHashUI(boolean visible){
+        VBox showHashField = (VBox) Main.root.lookup("#showHashField");
+        showHashField.setVisible(visible);
+        Main.root.lookup("#showFields").setDisable(!visible);
+        if(!visible){
+            if(showHashFieldWidth == 0){
+                showHashFieldWidth = showHashField.getWidth();
+            }
+            showHashField.setPrefWidth(0);
+            showHashField.setMaxWidth(0);
+        }else{
+            if(showHashFieldWidth != 0){
+//                showHashField.setMinWidth(showHashFieldWidth);
+                showHashField.setMaxWidth(showHashFieldWidth);
+                showHashField.setPrefWidth(showHashFieldWidth);
+            }
+        }
+
     }
 }

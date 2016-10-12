@@ -61,3 +61,5 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+out/production/RedisClient/zx/background.jpg
+out/production/RedisClient/modena/windows8-window-frame.png

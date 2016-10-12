@@ -3,6 +3,7 @@ package zx.model;
 import com.datalook.gain.model.RedisProto;
 import javafx.beans.property.SimpleStringProperty;
 import zx.constant.Constant;
+import zx.redis.RedisType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +15,9 @@ import java.util.List;
  * @author ：zhaokuiqiang
  */
 public class TableData<T> {
-    SimpleStringProperty type = new SimpleStringProperty();
+    RedisType type = null;
     SimpleStringProperty key = new SimpleStringProperty();
+    SimpleStringProperty field = new SimpleStringProperty();
     SimpleStringProperty value = new SimpleStringProperty();
     //hash存储field列
     List<String> fieldList = new ArrayList<>();
@@ -49,16 +51,12 @@ public class TableData<T> {
         this.source = source;
     }
 
-    public String getType() {
-        return type.get();
-    }
-
-    public SimpleStringProperty typeProperty() {
+    public RedisType getType() {
         return type;
     }
 
-    public void setType(String type) {
-        this.type.set(type);
+    public void setType(RedisType type) {
+        this.type = type;
     }
 
     public String getKey() {
@@ -81,7 +79,7 @@ public class TableData<T> {
         return value;
     }
 
-    public List<String> getField() {
+    public List<String> getFieldList() {
         return fieldList;
     }
 
@@ -91,6 +89,14 @@ public class TableData<T> {
 
     public void setValue(String value) {
         this.value.set(value);
+    }
+
+    public String getField() {
+        return field.get();
+    }
+
+    public void setField(String field) {
+        this.field.set(field);
     }
 
     public String valueString(){

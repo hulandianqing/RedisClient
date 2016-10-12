@@ -1,5 +1,6 @@
 package zx.util;
 
+import com.datalook.gain.jedis.command.common.CommandExists;
 import com.datalook.gain.jedis.command.common.CommandKeys;
 import com.datalook.gain.jedis.command.common.CommandSelect;
 import com.datalook.gain.jedis.command.common.CommandType;
@@ -23,6 +24,7 @@ import zx.jedis.JedisFactory;
 import zx.model.TableData;
 import zx.redis.RedisType;
 
+import java.security.Key;
 import java.util.*;
 
 /**
@@ -77,7 +79,7 @@ public class JedisUtil {
                     tableData.setKey(stringKeys.get(i));
                     StringBuilder sb = new StringBuilder();
                     tableData.setValue(stringValues.get(i));
-                    tableData.setType(Constant.REDIS_STRING);
+                    tableData.setType(RedisType.STRING);
                     tableData.setSource(stringKeys.get(i));
                     result.add(tableData);
                 }
@@ -92,7 +94,7 @@ public class JedisUtil {
             for(int i = 0; i < hashFields.size(); i++) {
                 TableData tableData = new TableData();
                 tableData.setKey(hashKeys.get(i));
-                tableData.setType(Constant.REDIS_HASH);
+                tableData.setType(RedisType.HASH);
                 Set<byte[]> hashKeySet = hashFields.get(i);
                 Iterator<byte[]> hashKeyIt = hashKeySet.iterator();
                 StringBuilder sb = new StringBuilder();
@@ -161,11 +163,25 @@ public class JedisUtil {
     }
 
     /**
+     * 检索key是否存在
+     * @param key
+     * @return
+     */
+    public static boolean exists(String id,String key){
+        CommandExists exists = new CommandExists(key);
+        JedisResult<String> jedisResult = getExecutor(id).addCommand(exists).execute().getResult();
+        if(jedisResult.getResult() == null){
+            return false;
+        }
+        return jedisResult.getResult().equals("1") ? true : false;
+    }
+
+    /**
      * 获取当前库key的类型
      * @return
      */
     public static RedisType getKeyType(String id, String key){
-        return RedisType.valueOf(getKeyType(getExecutor(id),key));
+        return RedisType.valueOf(getKeyType(getExecutor(id),key).toUpperCase());
     }
 
     /**
@@ -188,24 +204,45 @@ public class JedisUtil {
     }
 
     /**
-     * 如果field为空则执行get否则执行hget
+     * 执行get
      * @param id
-     * @param key
-     * @param field
+     * @param tableData
      * @return
      */
-    public static String getValue(String id,String key,String field){
-        if(ValidateUtils.isEmpty(id) || ValidateUtils.isEmpty(key)){
-            return null;
+    public static TableData getValueSet(String id,TableData tableData){
+        if(ValidateUtils.isEmpty(id) || ValidateUtils.isEmpty(tableData.getKey())){
+            tableData.setValue("操作失败，key："+ tableData.getKey());
+            return tableData;
         }
         Executor executor = getExecutor(id);
         JedisResult jedisResult;
-        if(ValidateUtils.isEmpty(field)){
-            jedisResult = executor.addCommand(new CommandGet(key)).execute().getResult();
-        }else{
-            jedisResult = executor.addCommand(new CommandHashGet(key,field)).execute().getResult();
+        jedisResult = executor.addCommand(new CommandGet(tableData.getKey())).execute().getResult();
+        tableData.setValue(handlerJedisResult(jedisResult));
+        return tableData;
+    }
+
+    /**
+     * 执行hget
+     * @param id
+     * @param tableData
+     * @return
+     */
+    public static TableData getValueHash(String id,TableData tableData){
+        if(ValidateUtils.isEmpty(id) || ValidateUtils.isEmpty(tableData.getKey()) || ValidateUtils.isEmpty(tableData.getField())){
+            tableData.setValue("操作失败，key："+ tableData.getKey() + " field:"+tableData.getField());
+            return tableData;
         }
+        Executor executor = getExecutor(id);
+        JedisResult jedisResult;
+        jedisResult = executor.addCommand(new CommandHashGet(tableData.getKey(),tableData.getField())).execute().getResult();
+        tableData.setValue(handlerJedisResult(jedisResult));
+        return tableData;
+    }
+
+    public static String handlerJedisResult(JedisResult jedisResult){
+        TableData tableData = null;
         if(jedisResult.getResult() != null){
+            tableData = new TableData();
             if(jedisResult.getResult() instanceof byte[]){
                 return Main.CODEC.decodeValue((byte[]) jedisResult.getResult());
             }else{

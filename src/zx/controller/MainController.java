@@ -1,6 +1,7 @@
 package zx.controller;
 
 import com.datalook.gain.util.ValidateUtils;
+import com.sun.xml.internal.bind.v2.model.core.ID;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +14,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import zx.constant.Constant;
 import zx.design.Main;
+import zx.model.TableData;
 import zx.util.DesignUtil;
 import zx.util.JedisUtil;
 
@@ -54,9 +56,12 @@ public class MainController {
         key = textField.getText();
         textField = (TextField) Main.root.lookup("#showFields");
         field = textField.getText();
-        String value = null;
         try {
-            value = JedisUtil.getValue(Main.redisId,key,field);
+            TableData tableData = new TableData();
+            tableData.setKey(key);
+            tableData.setField(field);
+            tableData = JedisUtil.getKeyType(Main.redisId,key).execute(tableData);
+            DesignUtil.refreshShowData(tableData);
         } catch(Exception e) {
             e.printStackTrace();
             if(e.getMessage() != null){
@@ -64,11 +69,6 @@ public class MainController {
             }else{
                 Main.dialog.show("redis连接异常");
             }
-        }
-        if(ValidateUtils.isEmpty(field)){
-            DesignUtil.refreshShowData(key,null,value);
-        }else{
-            DesignUtil.refreshShowData(key, FXCollections.observableArrayList(field),value);
         }
 
     }
