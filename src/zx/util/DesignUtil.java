@@ -159,14 +159,11 @@ public class DesignUtil {
             if(redisBean == null){
                 return null;
             }
-            String id = redisBean.getId();
-            Executor executor = new CommandExecutor(JedisFactory.getJedis(id));
-            JedisResult<Long> jedisResult = executor.addCommand(new CommandDBSize()).execute().getResult();
-            Long dbSize = jedisResult.getResult();
+            String databases = JedisUtil.getDatabases(redisBean.getId());
+            int db = Integer.parseInt(databases);
             List<TreeItem<Object>> treeItems = new ArrayList<>();
-            TreeItem<RedisDB> tree = null;
-            for(int i = 0; i < dbSize; i++) {
-                treeItems.add(new TreeItem<>(new RedisDB(id,i,Constant.DB + i)));
+            for(int i = 0; i < db; i++) {
+                treeItems.add(new TreeItem<>(new RedisDB(databases,i,Constant.DB + i)));
             }
             return treeItems;
         }catch(RuntimeException e){

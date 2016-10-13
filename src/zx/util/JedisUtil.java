@@ -1,8 +1,6 @@
 package zx.util;
 
-import com.datalook.gain.jedis.command.common.CommandKeys;
-import com.datalook.gain.jedis.command.common.CommandSelect;
-import com.datalook.gain.jedis.command.common.CommandType;
+import com.datalook.gain.jedis.command.common.*;
 import com.datalook.gain.jedis.command.executor.CommandExecutor;
 import com.datalook.gain.jedis.command.executor.CommandMultiExecutor;
 import com.datalook.gain.jedis.command.executor.Executor;
@@ -16,13 +14,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import redis.clients.jedis.Response;
 import redis.clients.util.SafeEncoder;
-import zx.codec.Codec;
 import zx.codec.DefaultDecode;
 import zx.constant.Constant;
 import zx.design.Main;
 import zx.jedis.JedisFactory;
 import zx.model.TableData;
 import zx.redis.RedisType;
+import zx.redis.command.config.Config_Get;
 
 import java.util.*;
 
@@ -312,6 +310,16 @@ public class JedisUtil {
         } catch(Exception e) {
             return false;
         }
+    }
+
+    /**
+     * 获取数据库数量
+     * @return
+     */
+    public static String getDatabases(String id){
+        Executor executor = new CommandExecutor(JedisFactory.getJedis(id));
+        JedisResult<ArrayList> jedisResult = executor.addCommand(new CommandConfigGet(Config_Get.DATABASES)).execute().getResult();
+        return String.valueOf(jedisResult.getResult().get(1));
     }
 
     public static Executor getExecutorMulti(String id){
