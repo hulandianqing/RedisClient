@@ -1,8 +1,14 @@
 package zx.redis;
 
+import com.datalook.gain.util.ValidateUtils;
+import javafx.collections.FXCollections;
 import zx.design.Main;
 import zx.model.TableData;
 import zx.util.JedisUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 功能描述：redis类型
@@ -20,12 +26,20 @@ public enum RedisType {
     },STRING("string"){
         @Override
         public TableData execute0(TableData data) {
-            return JedisUtil.getValueSet(Main.redisId,data);
+            return JedisUtil.getValueSet(Main.redisDB.getId(),data);
         }
     },HASH("hash"){
         @Override
         public TableData execute0(TableData data) {
-            return JedisUtil.getValueHash(Main.redisId,data);
+            if(ValidateUtils.isEmpty(data.getField())){
+                List<TableData> keyList = new ArrayList<>();
+                keyList.add(data);
+                List<List<TableData>> tempList = JedisUtil.getAllHash(Main.redisDB.getId(),keyList);
+                data.setFields(tempList.get(0));
+                return data;
+            }else{
+                return JedisUtil.getValueHash(Main.redisDB.getId(),data);
+            }
         }
     },LIST("list"){
         @Override
@@ -48,7 +62,7 @@ public enum RedisType {
     };
 
     String type = null;
-    private RedisType(String type){
+    RedisType(String type){
         this.type = type;
     }
 

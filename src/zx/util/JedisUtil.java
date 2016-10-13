@@ -1,6 +1,5 @@
 package zx.util;
 
-import com.datalook.gain.jedis.command.common.CommandExists;
 import com.datalook.gain.jedis.command.common.CommandKeys;
 import com.datalook.gain.jedis.command.common.CommandSelect;
 import com.datalook.gain.jedis.command.common.CommandType;
@@ -13,10 +12,11 @@ import com.datalook.gain.jedis.command.set.CommandMGet;
 import com.datalook.gain.jedis.command.set.CommandSet;
 import com.datalook.gain.jedis.result.JedisResult;
 import com.datalook.gain.util.ValidateUtils;
-import com.google.protobuf.InvalidProtocolBufferException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import redis.clients.jedis.Response;
+import redis.clients.util.SafeEncoder;
+import zx.codec.Codec;
 import zx.codec.DefaultDecode;
 import zx.constant.Constant;
 import zx.design.Main;
@@ -24,7 +24,6 @@ import zx.jedis.JedisFactory;
 import zx.model.TableData;
 import zx.redis.RedisType;
 
-import java.security.Key;
 import java.util.*;
 
 /**
@@ -40,6 +39,12 @@ public class JedisUtil {
      */
     public final static Map<String,ObservableList<String>> CURRENTKEYFIELDS = new HashMap<>();
 
+    /**
+     * 获取所有key
+     * @param id
+     * @param index 数据库index
+     * @return
+     */
     public static HashSet<String> getAllKey(String id,int index){
         Executor executor = getExecutor(id);
         JedisResult jedisResult = executor.addCommand(new CommandSelect(index)).execute().getResult();
@@ -60,13 +65,13 @@ public class JedisUtil {
         HashSet<String> set = getAllKey(id,index);
         if(set.size() > 0){
             Iterator<String> iterator = set.iterator();
-            List<String> hashKeys = new ArrayList<>();
+            List<TableData> hashKeys = new ArrayList<>();
             List<String> stringKeys = new ArrayList<>();
             while(iterator.hasNext()){
                 String key = iterator.next();
                 String type = getKeyType(getExecutor(id),key);
                 if(Constant.REDIS_HASH.equals(type)){
-                    hashKeys.add(key);
+                    hashKeys.add(new TableData(key));
                 }else if(Constant.REDIS_STRING.equals(type)){
                     stringKeys.add(key);
                 }
@@ -85,7 +90,7 @@ public class JedisUtil {
                 }
             }
             //获取hash
-            List<Set<byte[]>> hashFields = getAllHash(id,hashKeys);
+            List<List<TableData>> hashFields = getAllHash(id,hashKeys);
             if(hashFields != null && hashFields.size() > 0){
                 //清空缓存中存储的当前hash数据
                 CURRENTKEYFIELDS.clear();
@@ -93,19 +98,18 @@ public class JedisUtil {
             //遍历hash
             for(int i = 0; i < hashFields.size(); i++) {
                 TableData tableData = new TableData();
-                tableData.setKey(hashKeys.get(i));
+                tableData.setKey(hashKeys.get(i).getKey());
                 tableData.setType(RedisType.HASH);
-                Set<byte[]> hashKeySet = hashFields.get(i);
-                Iterator<byte[]> hashKeyIt = hashKeySet.iterator();
+                List<TableData> hashKeyList = hashFields.get(i);
                 StringBuilder sb = new StringBuilder();
 //                List<RedisProto.User> sourceData = new ArrayList<>();
                 ObservableList<String> observableList = FXCollections.observableArrayList();
-                while(hashKeyIt.hasNext()){
-                    byte[] hashFiels = hashKeyIt.next();
-                    String decodeFields = Main.CODEC.decodeField(hashFiels);
+                for(int j = 0; j < hashKeyList.size(); j++){
+                    TableData data = hashKeyList.get(i);
+                    String decodeFields = data.getField();
                     sb.append(decodeFields);
-                    tableData.addField(sb.toString());
-                    if(hashKeyIt.hasNext()){
+                    tableData.setField(sb.toString());
+                    if(j != 0){
                         sb.append(" & ");
                     }
                     observableList.add(decodeFields);
@@ -147,33 +151,34 @@ public class JedisUtil {
      * 获取所有类型是string的value
      * @return
      */
-    public static List<Set<byte[]>> getAllHash(String id, List<String> keys){
-        if(keys == null || keys.size() == 0){
-            return new ArrayList<>();
+    public static List<List<TableData>> getAllHash(String id, List<TableData> dataList){
+        List<List<TableData>> rsList = new ArrayList<>();
+        if(dataList == null || dataList.size() == 0){
+            return rsList;
         }
         Executor executor = getExecutorMulti(id);
-        for(int i = 0; i < keys.size(); i++) {
+        for(int i = 0; i < dataList.size(); i++) {
             // 改为获取hash的field
 //            executor.addCommands(new CommandHashGetAll(keys.get(i)));
-            executor.addCommands(new CommandHashKeys(keys.get(i)));
+            executor.addCommands(new CommandHashKeys(dataList.get(i).getKey()));
         }
         JedisResult jedisResult = executor.execute().getResult();
         Response<List<Set<byte[]>>> result = (Response<List<Set<byte[]>>>) jedisResult.getResult();
-        return result.get();
-    }
-
-    /**
-     * 检索key是否存在
-     * @param key
-     * @return
-     */
-    public static boolean exists(String id,String key){
-        CommandExists exists = new CommandExists(key);
-        JedisResult<String> jedisResult = getExecutor(id).addCommand(exists).execute().getResult();
-        if(jedisResult.getResult() == null){
-            return false;
+        List<Set<byte[]>> setList = result.get();
+        for(int i = 0; i < setList.size(); i++) {
+            Iterator<byte[]> iterator = setList.get(i).iterator();
+            List<TableData> tempList = new ArrayList<>();
+            while(iterator.hasNext()){
+                String field = DefaultDecode.DEFAULT.decode(iterator.next());
+                TableData data = new TableData();
+                data.setKey(dataList.get(i).getKey());
+                data.setField(field);
+                data.setType(dataList.get(i).getType());
+                tempList.add(data);
+            }
+            rsList.add(tempList);
         }
-        return jedisResult.getResult().equals("1") ? true : false;
+        return rsList;
     }
 
     /**
@@ -197,7 +202,7 @@ public class JedisUtil {
         Executor executor = getExecutor(id);
         JedisResult jedisResult = executor.addCommand(new CommandHashGet(key,field)).execute().getResult();
         if(jedisResult.getResult() != null){
-            return Main.CODEC.decodeValue((byte[]) jedisResult.getResult());
+            return CodecUtil.decode((byte[]) jedisResult.getResult());
         }else{
             return null;
         }
@@ -218,6 +223,7 @@ public class JedisUtil {
         JedisResult jedisResult;
         jedisResult = executor.addCommand(new CommandGet(tableData.getKey())).execute().getResult();
         tableData.setValue(handlerJedisResult(jedisResult));
+        tableData.setSource(SafeEncoder.encode((byte[]) jedisResult.getResult()));
         return tableData;
     }
 
@@ -236,18 +242,15 @@ public class JedisUtil {
         JedisResult jedisResult;
         jedisResult = executor.addCommand(new CommandHashGet(tableData.getKey(),tableData.getField())).execute().getResult();
         tableData.setValue(handlerJedisResult(jedisResult));
+        if(tableData.getValue() == null){
+            tableData.setValue("无效的key");
+        }
         return tableData;
     }
 
     public static String handlerJedisResult(JedisResult jedisResult){
-        TableData tableData = null;
         if(jedisResult.getResult() != null){
-            tableData = new TableData();
-            if(jedisResult.getResult() instanceof byte[]){
-                return Main.CODEC.decodeValue((byte[]) jedisResult.getResult());
-            }else{
-                return (String) jedisResult.getResult();
-            }
+            return CodecUtil.decode((byte[]) jedisResult.getResult());
         }else{
             return null;
         }
@@ -259,13 +262,13 @@ public class JedisUtil {
      * @param value
      */
     public static boolean saveData(String key,String value){
-        if(ValidateUtils.isEmpty(Main.redisId)){
+        if(ValidateUtils.isEmpty(Main.redisDB.getId())){
             return false;
         }
         if(ValidateUtils.isEmpty(key) || ValidateUtils.isEmpty(value)){
             return false;
         }
-        Executor executor = getExecutor(Main.redisId);
+        Executor executor = getExecutor(Main.redisDB.getId());
         try {
             executor.addCommand(new CommandSet(key,value)).execute();
         }catch(RuntimeException e){
@@ -281,14 +284,14 @@ public class JedisUtil {
      * @param value
      */
     public static boolean saveData(String key,String field,String value){
-        if(ValidateUtils.isEmpty(Main.redisId)){
+        if(ValidateUtils.isEmpty(Main.redisDB.getId())){
             return false;
         }
         if(ValidateUtils.isEmpty(key) || ValidateUtils.isEmpty(field)
                  || ValidateUtils.isEmpty(value)){
             return false;
         }
-        Executor executor = getExecutor(Main.redisId);
+        Executor executor = getExecutor(Main.redisDB.getId());
         try {
             executor.addCommand(new CommandHashSet(key,field,value)).execute();
         }catch(RuntimeException e){
@@ -297,11 +300,31 @@ public class JedisUtil {
         return true;
     }
 
+    /**
+     * 选择数据库
+     * @param index
+     * @return
+     */
+    public static boolean selectDB(int index){
+        try {
+            getExecutor(Main.redisDB.getId()).addCommand(new CommandSelect(index)).execute();
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
+    }
+
     public static Executor getExecutorMulti(String id){
-        return new CommandMultiExecutor(JedisFactory.getJedis(id));
+        Executor executor = new CommandMultiExecutor(JedisFactory.getJedis(id));
+        if(Main.redisDB.getIndex() != null)
+            executor.addCommand(new CommandSelect(Main.redisDB.getIndex()));
+        return executor;
     }
     public static Executor getExecutor(String id){
-        return new CommandExecutor(JedisFactory.getJedis(id));
+        Executor executor = new CommandExecutor(JedisFactory.getJedis(id));
+        if(Main.redisDB.getIndex() != null)
+            executor.addCommand(new CommandSelect(Main.redisDB.getIndex()));
+        return executor;
     }
 
 }

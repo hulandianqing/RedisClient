@@ -1,24 +1,18 @@
 package zx.controller;
 
 import com.datalook.gain.util.ValidateUtils;
-import com.sun.xml.internal.bind.v2.model.core.ID;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeView;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import zx.constant.Constant;
 import zx.design.Main;
 import zx.model.TableData;
 import zx.util.DesignUtil;
 import zx.util.JedisUtil;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 功能描述：主类控制器
@@ -46,7 +40,7 @@ public class MainController {
 
     @FXML
     public void searchKeyAndField(){
-        if(Main.redisId == null){
+        if(Main.redisDB.getId() == null){
             Main.dialog.show("请选择redis连接");
             return;
         }
@@ -57,11 +51,39 @@ public class MainController {
         textField = (TextField) Main.root.lookup("#showFields");
         field = textField.getText();
         try {
-            TableData tableData = new TableData();
-            tableData.setKey(key);
-            tableData.setField(field);
-            tableData = JedisUtil.getKeyType(Main.redisId,key).execute(tableData);
-            DesignUtil.refreshShowData(tableData);
+            if(!ValidateUtils.isEmpty(key)){
+                List<TableData> dataList = new ArrayList<>();
+                String [] keys = key.split(";");
+                if(keys.length > 1 || ValidateUtils.isEmpty(field)){
+                    //按key查询多条string记录
+                    if(!ValidateUtils.isEmpty(field) && field.indexOf(Constant.SEPARATE) > 0){
+                        Main.dialog.show("key或field不能同时查询多条");
+                        return;
+                    }
+                    for(int i = 0; i < keys.length; i++) {
+                        TableData tableData = new TableData();
+                        tableData.setKey(keys[i]);
+                        tableData.setField(field);
+                        JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).execute(tableData);
+                        dataList.add(tableData);
+                    }
+                }else{
+                    if(!ValidateUtils.isEmpty(field)){
+                        //按field查询hash
+                        String [] fields = field.split(Constant.SEPARATE);
+                        for(int i = 0; i < fields.length; i++) {
+                            TableData tableData = new TableData();
+                            tableData.setKey(key);
+                            tableData.setField(fields[i]);
+                            JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).execute(tableData);
+                            dataList.add(tableData);
+                        }
+                    }
+                }
+                DesignUtil.refreshShowData(dataList);
+            }else{
+                Main.dialog.show("无效的key");
+            }
         } catch(Exception e) {
             e.printStackTrace();
             if(e.getMessage() != null){

@@ -1,17 +1,12 @@
 package zx.util;
 
 import com.datalook.gain.jedis.command.common.CommandDBSize;
-import com.datalook.gain.jedis.command.common.CommandKeys;
-import com.datalook.gain.jedis.command.common.CommandSelect;
 import com.datalook.gain.jedis.command.executor.CommandExecutor;
-import com.datalook.gain.jedis.command.executor.CommandMultiExecutor;
 import com.datalook.gain.jedis.command.executor.Executor;
 import com.datalook.gain.jedis.result.JedisResult;
 import com.datalook.gain.util.ValidateUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -25,8 +20,8 @@ import zx.model.RedisDB;
 import zx.model.TableData;
 import zx.redis.RedisType;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -61,7 +56,7 @@ public class DesignUtil {
         }
         rootItem.setExpanded(true);
         //清除reis db的选中
-        Main.currentRedisDB = null;
+        Main.redisDB.setIndex(null);
         clearTabPane();
         clearTableView();
         clearListView();
@@ -75,9 +70,9 @@ public class DesignUtil {
      * 刷新redis数据table
      */
     public static void refreshTable(){
-        if(Main.currentRedisDB != null){
+        if(Main.redisDB.getIndex() != null){
             clearTableView();
-            ObservableList<TableData> list = DesignUtil.showSelectDBData(Main.currentRedisDB.getId(),Main.currentRedisDB.getIndex());
+            ObservableList<TableData> list = DesignUtil.showSelectDBData(Main.redisDB.getId(),Main.redisDB.getIndex());
             Main.tableView.setItems(list);
         }else{
             Main.dialog.show("未选中redis");
@@ -87,17 +82,45 @@ public class DesignUtil {
     /**
      * 刷新下面的数据
      */
+    public static void refreshShowData(List<TableData> dataList){
+        if(dataList == null){
+            return;
+        }
+        clearListView();
+        clearTabPane();
+        for(int i = 0; i < dataList.size(); i++) {
+            addTableData(dataList.get(i));
+        }
+    }
+
+    /**
+     * 刷新下面的数据
+     */
     public static void refreshShowData(TableData tableData){
         clearListView();
         clearTabPane();
+        addTableData(tableData);
+    }
+
+    /**
+     * 添加value数据
+     * @param tableData
+     */
+    public static void addTableData(TableData tableData){
         String text = tableData.getKey();
         if(tableData.getType() == RedisType.HASH){
-            Main.listView.getItems().addAll(FXCollections.observableArrayList(tableData.getField()));
+            if(tableData.getFields() != null){
+                Main.listView.getItems().addAll((Collection<? extends TableData>) tableData.getFields());
+            }else{
+                Main.listView.getItems().addAll(tableData);
+            }
             Main.listView.getSelectionModel().select(0);
             text+="-"+tableData.getField();
         }
         text += " [" + tableData.getType() + "]";
-        createTab(text,tableData.getValue());
+        if(tableData.getFields() == null && tableData.getValue() != null){
+            createTab(text,tableData.getValue());
+        }
     }
 
     /**
@@ -289,7 +312,7 @@ public class DesignUtil {
         TextField textField = (TextField) Main.dataServer.lookup("#keyField");
         textField.setText(tableData.getKey());
         textField = (TextField) Main.dataServer.lookup("#fieldField");
-        textField.setText(tableData.getHashField());
+        textField.setText(tableData.getField());
         textField = (TextField) Main.dataServer.lookup("#valueField");
         textField.setText(tableData.getValue());
         showWindow(scene,null,"修改数据",Modality.APPLICATION_MODAL);
@@ -297,8 +320,8 @@ public class DesignUtil {
 
     public static void showWindow(Scene scene,Object userData,String title,Modality modality){
         Stage stage = new Stage();
-        stage.setUserData(userData);
         stage.setScene(scene);
+        scene.setUserData(userData);
         stage.setTitle(title);
         stage.initModality(modality);
         stage.getIcons().add(Constant.ICONIMG);

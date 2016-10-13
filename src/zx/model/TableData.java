@@ -1,12 +1,8 @@
 package zx.model;
 
-import com.datalook.gain.model.RedisProto;
 import javafx.beans.property.SimpleStringProperty;
 import zx.constant.Constant;
 import zx.redis.RedisType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 功能描述：redis数据
@@ -14,40 +10,33 @@ import java.util.List;
  *
  * @author ：zhaokuiqiang
  */
-public class TableData<T> {
+public class TableData {
+    public TableData() {
+    }
+
+    public TableData(String key) {
+        this(key,null);
+    }
+
+    public TableData(String key, String field) {
+        this.setKey(key);
+        this.setField(field);
+    }
+
     RedisType type = null;
     SimpleStringProperty key = new SimpleStringProperty();
     SimpleStringProperty field = new SimpleStringProperty();
     SimpleStringProperty value = new SimpleStringProperty();
-    //hash存储field列
-    List<String> fieldList = new ArrayList<>();
-    //hash存储当前field和value
-    String hashField;
-    String hashValue;
     //原始数据
-    T source;
+    String source;
+    //存放field列表
+    Object fields = null;
 
-    public String getHashValue() {
-        return hashValue;
-    }
-
-    public void setHashValue(String hashValue) {
-        this.hashValue = hashValue;
-    }
-
-    public String getHashField() {
-        return hashField;
-    }
-
-    public void setHashField(String hashField) {
-        this.hashField = hashField;
-    }
-
-    public T getSource() {
+    public String getSource() {
         return source;
     }
 
-    public void setSource(T source) {
+    public void setSource(String source) {
         this.source = source;
     }
 
@@ -75,18 +64,6 @@ public class TableData<T> {
         return value.get();
     }
 
-    public SimpleStringProperty valueProperty() {
-        return value;
-    }
-
-    public List<String> getFieldList() {
-        return fieldList;
-    }
-
-    public void addField(String field) {
-        fieldList.add(field);
-    }
-
     public void setValue(String value) {
         this.value.set(value);
     }
@@ -97,6 +74,14 @@ public class TableData<T> {
 
     public void setField(String field) {
         this.field.set(field);
+    }
+
+    public Object getFields() {
+        return fields;
+    }
+
+    public void setFields(Object fields){
+        this.fields = fields;
     }
 
     public String valueString(){

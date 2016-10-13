@@ -43,4 +43,9 @@ public class Constant {
     public final static String REDIS_HASH = "hash";
     public final static String REDIS_LIST = "list";
 
+    /**
+     * key和field的拆分
+     */
+    public final static String SEPARATE = ";";
+
 }

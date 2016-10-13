@@ -1,5 +1,7 @@
 package zx.codec;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 /**
  * 功能描述：编码解码需要实现此接口
  * 时间：2016/3/29 14:01
@@ -7,9 +9,7 @@ package zx.codec;
  * @author ：zhaokuiqiang
  */
 public interface Codec {
-    public String decodeValue(byte [] source);
-    public byte[] encodeValue(Object source);
+    public String decode(byte [] source) throws InvalidProtocolBufferException;
+    public byte[] encode(Object source);
 
-    public String decodeField(byte [] source);
-    public byte[] encodeField(Object source);
 }
