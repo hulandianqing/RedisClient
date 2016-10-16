@@ -6,7 +6,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -14,12 +13,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import zx.constant.Constant;
+import zx.constant.ImageConstant;
+import zx.model.BottomTab;
 import zx.model.RedisBean;
 import zx.model.RedisDB;
 import zx.model.TableData;
@@ -28,6 +31,8 @@ import zx.util.DesignUtil;
 import zx.util.JedisUtil;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 功能描述：
@@ -41,8 +46,6 @@ public class Main extends Application {
     final static Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
     public static VBox root;
     public static Dialog dialog;
-    //数据的table
-    public static TableView tableView;
     //左侧的redis树
     public static TreeView<Object> treeView;
     //左侧的fiels树
@@ -51,7 +54,7 @@ public class Main extends Application {
     //redis添加编辑页面
     public static Parent redisServer;
     //数据页面
-    public static Parent dataServer;
+    public static VBox dataServer;
     //上次一选中的cell（获取cell不区分父子级关系，所以保留一份备份）
     public Cell backCell = null;
     /**
@@ -59,7 +62,13 @@ public class Main extends Application {
      */
     public static RedisDB redisDB = new RedisDB();
 
-    static final String [] TABLECOLUMN = new String[]{"type","key","value"};
+    public static ContextMenu ContextMenu_RedisServer = DesignUtil.getContextMenuRedisServer();
+    public static ContextMenu ContextMenu_RedisDB = DesignUtil.getContextMenuRedisDB();
+
+    public static TabPane bottomTabPane;
+    public static TableView findTable;
+    static final String [] FINDTABLECOLUMN = new String[]{"type","key","value"};
+    public static TextArea consoleTextArea;
 
     public static void main(String[] args) {
         //加载页面
@@ -69,30 +78,15 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         root = FXMLLoader.load(getClass().getResource("main.fxml"));
+        findComponent();
         initDialog();
-        initContent();
-        treeView = (TreeView) root.lookup("#serverTree");
-        tableView = (TableView) root.lookup("#dataTable");
-        /*********暂时隐藏右上tab功能********/
-        tableView.setVisible(false);
-        HBox pane = (HBox) root.lookup("#tabhidden");
-        pane.setMaxHeight(0);
-        pane.setPrefHeight(0);
-        pane.setMinHeight(0);
-        pane.setVisible(false);
-        /********end*********/
-        tabPane = (TabPane) root.lookup("#showHashTabPane");
-        listView = (ListView) root.lookup("#fieldListView");
-        //server页面
-        redisServer = FXMLLoader.load(Main.class.getResource("server.fxml"));
-        dataServer = FXMLLoader.load(Main.class.getResource("data.fxml"));
+        initContentBounds();
         //初始化组件
         initRedisiTree(treeView);
-        initDataTable();
         initListView();
-        initTreeRightClickMenus();
-        initTableRightClickMenus();
         initDataServer();
+        initBottomTabPane();
+        initDataTable();
         //初始化窗体
         Scene scene = new Scene(root, 0, 0);
         stage.setX(primaryScreenBounds.getMinX());
@@ -106,11 +100,21 @@ public class Main extends Application {
         stage.show();
     }
 
+    public void findComponent() throws IOException {
+        treeView = (TreeView) root.lookup("#serverTree");
+        tabPane = (TabPane) root.lookup("#showHashTabPane");
+        listView = (ListView) root.lookup("#fieldListView");
+        //server页面
+        redisServer = FXMLLoader.load(Main.class.getResource("server.fxml"));
+        dataServer = FXMLLoader.load(Main.class.getResource("data.fxml"));
+        findTable = (TableView) root.lookup("#dataTable");
+        consoleTextArea = (TextArea) root.lookup("#consoleTextArea");
+    }
 
     /**
-     * 中间部位
+     * 初始化组件的大小
      */
-    public void initContent(){
+    public void initContentBounds(){
         HBox hBox = (HBox) root.lookup("#content");
         hBox.setPrefWidth(primaryScreenBounds.getMaxX());
         hBox.setPrefHeight(primaryScreenBounds.getMaxY());
@@ -120,8 +124,7 @@ public class Main extends Application {
      * 数据table
      */
     public void initDataTable(){
-//        TableView tableView = (TableView) root.lookup("#dataTable");
-        tableView.setRowFactory(new Callback<TableView,TableRow>() {
+        findTable.setRowFactory(new Callback<TableView,TableRow>() {
             @Override
             public TableRow call(TableView param) {
                 TableRow<TableData> tableRow = new TableRow<>();
@@ -161,11 +164,10 @@ public class Main extends Application {
                 return tableRow;
             }
         });
-        ObservableList<TableColumn> columns = tableView.getColumns();
+        ObservableList<TableColumn<TableData,?>> columns = findTable.getColumns();
         for(int i = 0; i < columns.size(); i++) {
             TableColumn column = (TableColumn) columns.get(i);
-//            column.setText(TABLECOLUMN[i]);
-            column.setCellValueFactory(new PropertyValueFactory<TableData,String>(TABLECOLUMN[i]));
+            column.setCellValueFactory(new PropertyValueFactory<TableData,String>(FINDTABLECOLUMN[i]));
         }
     }
 
@@ -178,87 +180,85 @@ public class Main extends Application {
         }
         DesignUtil.refreshTree();
         //设置cell
-        node.setCellFactory(new Callback<TreeView,TreeCell>() {
-            @Override
-            public TreeCell call(TreeView param) {
+        node.setCellFactory(param -> {
                 TreeCellImpl treeCell = new TreeCellImpl();
-                treeCell.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        TreeCellImpl cell = (TreeCellImpl) event.getSource();
-                        Object data = cell.getItem();
-                        if(data == null){
-                            return;
-                        }
-                        treeView.getContextMenu().setUserData(null);
-                        RedisBean tempBean = null;
-                        RedisDB tempDB = null;
-                        if(data instanceof  RedisBean){
-                            tempBean = (RedisBean) data;
-                            treeView.getContextMenu().setUserData(tempBean);
-                        }else if(data instanceof RedisDB){
-                            tempDB = (RedisDB) data;
-                        }
-                        //双击事件
-                        if(event.getClickCount() > 1){
-                            if(tempBean != null){
-                                //root子列表点击事件、初始化db列表
-                                if(tempBean != null && !ValidateUtils.isEmpty(tempBean.getId())){
-                                    boolean isExpanded = cell.getTreeItem().isExpanded();
-                                    treeCell.getTreeItem().getChildren().clear();
-                                    treeCell.getTreeItem().getChildren().addAll(DesignUtil.createDBTreeItem(tempBean));
-                                    treeCell.getTreeItem().setExpanded(isExpanded);
-                                    redisDB.setId(tempBean.getId());
-                                }
-                            }else if(tempDB != null){
-                                //db列表双击事件、初始化table数据
-                                if(!JedisUtil.selectDB(tempDB.getIndex())){
-                                    dialog.show("选择"+tempDB.getText()+"失败。");
-                                }else{
-                                    redisDB.setIndex(tempDB.getIndex());
-                                    redisDB.setText(tempDB.getText());
-                                    if(backCell != null){
-                                        if(backCell.getItem() instanceof RedisDB){
-                                            backCell.setText((((RedisDB) backCell.getItem()).getText()));
-                                        }
+                treeCell.addEventHandler(MouseEvent.MOUSE_CLICKED, event ->  {
+                    TreeCellImpl cell = (TreeCellImpl) event.getSource();
+                    Object data = cell.getItem();
+                    if(data == null){
+                        return;
+                    }
+                    RedisBean tempBean = null;
+                    RedisDB tempDB = null;
+                    treeView.setContextMenu(null);
+                    if(data instanceof  RedisBean){
+                        tempBean = (RedisBean) data;
+                        treeView.setContextMenu(tempBean.getMenuType().getContextMenu());
+                        Main.ContextMenu_RedisServer.setUserData(tempBean);
+                    }else if(data instanceof RedisDB){
+                        tempDB = (RedisDB) data;
+                        treeView.setContextMenu(tempDB.getMenuType().getContextMenu());
+                        Main.ContextMenu_RedisDB.setUserData(tempDB);
+                        String tempId = redisDB.getId();
+                        redisDB.setId(tempDB.getId());
+                        //db列表单机事件
+                        if(cell != backCell){
+                            if(!JedisUtil.selectDB(tempDB.getIndex())){
+                                redisDB.setId(tempId);
+                                dialog.show("选择"+tempDB.getText()+"失败。");
+                            }else{
+                                redisDB.setIndex(tempDB.getIndex());
+                                redisDB.setText(tempDB.getText());
+                                if(backCell != null){
+                                    if(backCell.getItem() instanceof RedisDB){
+                                        backCell.setText((((RedisDB) backCell.getItem()).getText()));
                                     }
-                                    cell.setText("● " + tempDB.getText());
-                                    backCell = cell;
                                 }
-                                //暂时屏蔽右上角tab功能，待优化
-//                                DesignUtil.refreshTable();
+                                cell.setText("● " + tempDB.getText());
+                                backCell = cell;
                             }
+                        }
+                    }
+                    //双击事件
+                    if(event.getClickCount() > 1){
+                        if(tempBean != null){
+                            //root子列表点击事件、初始化db列表
+                            if(tempBean != null && !ValidateUtils.isEmpty(tempBean.getId())){
+                                boolean isExpanded = cell.getTreeItem().isExpanded();
+                                treeCell.getTreeItem().getChildren().clear();
+                                treeCell.getTreeItem().getChildren().addAll(DesignUtil.createDBTreeItem(tempBean));
+                                treeCell.getTreeItem().setExpanded(isExpanded);
+                                redisDB.setId(tempBean.getId());
+                                if(redisDB.getIndex() == null){
+                                    redisDB.setIndex(0);
+                                }
+                            }
+                        }else if(tempDB != null){
+                            //暂时屏蔽右上角tab功能，待优化
+//                                DesignUtil.refreshTable();
                         }
                     }
                 });
                 return treeCell;
-            }
-        });
+            });
     }
 
     public void initListView(){
-        listView.setCellFactory(new Callback<ListView<TableData>,ListCell<TableData>>() {
-
-            @Override
-            public ListCell<TableData> call(ListView<TableData> param) {
-
+        listView.setCellFactory(param -> {
                 ListCellImpl listCell = new ListCellImpl();
-                listCell.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        TableData tableData = listCell.getItem();
-                        if(tableData == null){
-                            return;
-                        }
-                        String field = tableData.getField();
-                        TextField textField = (TextField) root.lookup("#showFields");
-                        textField.setText(field);
-                        String value = JedisUtil.getHashValue(redisDB.getId(),tableData.getKey(),field);
-                        if(!ValidateUtils.isEmpty(value)){
-                            DesignUtil.createTab(tableData.getKey() + "-" + field + " [" + tableData.getType() + "]",value);
-                        }else{
-                            dialog.show("无效的field，请刷新列表。");
-                        }
+                listCell.setOnMouseClicked(event -> {
+                    TableData tableData = listCell.getItem();
+                    if(tableData == null){
+                        return;
+                    }
+                    String field = tableData.getField();
+                    TextField textField = (TextField) root.lookup("#showFields");
+                    textField.setText(field);
+                    String value = JedisUtil.getHashValue(redisDB.getId(),tableData.getKey(),field);
+                    if(!ValidateUtils.isEmpty(value)){
+                        DesignUtil.createTab(tableData.getKey() + "-" + field + " [" + tableData.getType() + "]",value);
+                    }else{
+                        dialog.show("无效的field，请刷新列表。");
                     }
                 });
                 /*listCell.focusedProperty().addListener(new ChangeListener<Boolean>() {
@@ -269,7 +269,6 @@ public class Main extends Application {
                     }
                 });*/
                 return listCell;
-            }
         });
         /*listView.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
@@ -277,90 +276,6 @@ public class Main extends Application {
 
             }
         });*/
-    }
-
-    /**
-     * 初始化右键菜单
-     */
-    public void initTreeRightClickMenus(){
-        MenuItem addTreeMenu = new MenuItem("添加");
-        addTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                DesignUtil.addRedisServer();
-            }
-        });
-        MenuItem editTreeMenu = new MenuItem("修改");
-        editTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                Object data = ((MenuItem)event.getSource()).getParentPopup().getUserData();
-                if(data == null){
-                    dialog.show("请选择要修改的redis");
-                    return;
-                }
-                DesignUtil.editRedisServer((RedisBean) data);
-            }
-        });
-        MenuItem deleteTreeMenu = new MenuItem("删除");
-        deleteTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("gaojibamao");
-                Object data = ((MenuItem)event.getSource()).getParentPopup().getUserData();
-                if(data == null){
-                    dialog.show("请选择要删除的redis");
-                    return;
-                }
-                DesignUtil.deleteRedisServer((RedisBean) data);
-            }
-        });
-        MenuItem refreshTreeMenu = new MenuItem("刷新");
-        refreshTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                DesignUtil.refreshTree();
-            }
-        });
-        ContextMenu treeMenu = new ContextMenu();
-        treeMenu.getItems().addAll(addTreeMenu,editTreeMenu,deleteTreeMenu,refreshTreeMenu);
-        treeView.setContextMenu(treeMenu);
-    }
-    /**
-     * 初始化table右键菜单
-     */
-    public void initTableRightClickMenus(){
-        MenuItem addTreeMenu = new MenuItem("添加");
-        addTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                DesignUtil.addData();
-            }
-        });
-        MenuItem editTreeMenu = new MenuItem("编辑");
-        editTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                tableView.getSelectionModel().getSelectedItem();
-            }
-        });
-        MenuItem deleteTreeMenu = new MenuItem("删除");
-        deleteTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                MenuItem menuItem = (MenuItem) event.getTarget();
-            }
-        });
-        MenuItem refreshTreeMenu = new MenuItem("刷新");
-        deleteTreeMenu.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                MenuItem menuItem = (MenuItem) event.getTarget();
-            }
-        });
-        ContextMenu treeMenu = new ContextMenu();
-        treeMenu.getItems().addAll(addTreeMenu,editTreeMenu,deleteTreeMenu,refreshTreeMenu);
-        tableView.setContextMenu(treeMenu);
     }
 
     //初始化数据页面
@@ -377,10 +292,40 @@ public class Main extends Application {
                 }else if(Constant.REDIS_STRING.equals(choiceBox.getItems().get((Integer) newValue))){
                     //string
                     textField.setDisable(true);
+                }else{
+                    textField.setDisable(true);
                 }
             }
         });
         choiceBox.getSelectionModel().select(0);
+    }
+
+    /**
+     * 初始化下部的tab
+     * 事件真心坑爹
+     */
+    public void initBottomTabPane(){
+        bottomTabPane = (TabPane) root.lookup("#bottomTabPane");
+        bottomTabPane.getSelectionModel().select(0);
+        bottomTabPane.setOnMousePressed(event -> {
+            DesignUtil.changeBottomTab(true);
+        });
+        for(int i = 1; i < bottomTabPane.getTabs().size(); i++) {
+            Image img = ImageConstant.IMG.get(bottomTabPane.getTabs().get(i).getId());
+            if(img != null){
+                ImageView imageView = new ImageView(img);
+                imageView.setFitHeight(15);
+                imageView.setFitWidth(15);
+                bottomTabPane.getTabs().get(i).setGraphic(imageView);
+            }
+            AnchorPane anchorPane = (AnchorPane) bottomTabPane.getTabs().get(i).getContent();
+            anchorPane.setOnMousePressed(event -> {
+                BottomTab bottomTab = ((BottomTab)bottomTabPane.getUserData());
+                if(bottomTab != null){
+                    bottomTab.setTarget(true);
+                }
+            });
+        }
     }
 
     public void initDialog() throws IOException {
@@ -388,6 +333,7 @@ public class Main extends Application {
     }
 
     class TreeCellImpl extends TreeCell<Object>{
+
         @Override
         protected void updateItem(Object item, boolean empty) {
             super.updateItem(item, empty);

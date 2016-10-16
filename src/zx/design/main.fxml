@@ -2,69 +2,29 @@
 
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="555.0" prefWidth="837.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="zx.controller.MainController">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="zx.controller.MainController">
    <children>
-      <MenuBar prefHeight="25.0" prefWidth="1171.0">
-         <cursor>
-            <Cursor fx:constant="DEFAULT" />
-         </cursor>
-         <menus>
-            <Menu mnemonicParsing="false" text="Server">
-               <items>
-                  <MenuItem fx:id="server_add" mnemonicParsing="false" onAction="#redisAddAction" text="add" />
-               </items>
-            </Menu>
-            <Menu mnemonicParsing="false" text="Help">
-               <items>
-                  <MenuItem mnemonicParsing="false" text="About" />
-               </items>
-            </Menu>
-         </menus>
-      </MenuBar>
       <HBox fx:id="content" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
          <children>
-            <TreeView id="serverTree" fx:id="serverTree" fixedCellSize="0.0" minWidth="200.0">
+            <TreeView id="serverTree" fx:id="serverTree" fixedCellSize="0.0" minWidth="200.0" prefHeight="513.0" prefWidth="242.0">
                <HBox.margin>
                   <Insets />
                </HBox.margin></TreeView>
             <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
                <children>
-                  <HBox fx:id="tabhidden" minHeight="0.0" minWidth="0.0" VBox.vgrow="NEVER">
-                     <children>
-                        <TableView fx:id="dataTable" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
-                          <columns>
-                              <TableColumn maxWidth="1.7976931348623157E308" prefWidth="74.0" resizable="false" text="TYPE" />
-                            <TableColumn maxWidth="284.0" minWidth="200.0" prefWidth="260.0" resizable="false" text="KEY" />
-                            <TableColumn maxWidth="800.0" minWidth="400.0" prefWidth="500.0" text="FIELD/VALUE" />
-                          </columns>
-                           <columnResizePolicy>
-                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                           </columnResizePolicy>
-                        </TableView>
-                        <VBox alignment="CENTER" prefHeight="300.0" prefWidth="230.0" spacing="10.0">
-                           <children>
-                              <Button alignment="CENTER" mnemonicParsing="false" prefHeight="23.0" prefWidth="140.0" text="添加" />
-                              <Button alignment="CENTER" mnemonicParsing="false" prefHeight="23.0" prefWidth="140.0" text="修改" />
-                              <Button alignment="CENTER" mnemonicParsing="false" prefHeight="23.0" prefWidth="140.0" text="删除" textOverrun="CLIP" />
-                              <Button fx:id="tableRefreshBtn" alignment="CENTER" mnemonicParsing="false" prefHeight="23.0" prefWidth="140.0" text="刷新" textOverrun="CLIP" />
-                           </children>
-                           <padding>
-                              <Insets left="5.0" right="5.0" />
-                           </padding>
-                        </VBox>
-                     </children>
-                  </HBox>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" VBox.vgrow="ALWAYS">
                      <children>
                         <HBox alignment="CENTER_LEFT">
                            <children>
                               <Label alignment="CENTER" contentDisplay="BOTTOM" text="KEY：" />
                               <TextField fx:id="showKeys" HBox.hgrow="ALWAYS" />
-                              <Label fx:id="showHashFieldLable" maxWidth="35.0" minWidth="60.0" prefHeight="15.0" prefWidth="60.0" text="FIELD：" />
+                              <Label fx:id="showHashFieldLable" maxWidth="35.0" minWidth="60.0" prefHeight="15.0" prefWidth="60.0" text="FIELD：">
+                                 <HBox.margin>
+                                    <Insets left="20.0" />
+                                 </HBox.margin></Label>
                               <TextField fx:id="showFields" HBox.hgrow="ALWAYS" />
                               <VBox alignment="CENTER" prefWidth="230.0">
                                  <children>
@@ -102,7 +62,7 @@
                                     </TabPane>
                                  </children>
                                  <HBox.margin>
-                                    <Insets right="20.0" />
+                                    <Insets />
                                  </HBox.margin>
                               </VBox>
                            </children>
@@ -111,14 +71,51 @@
                   </VBox>
                </children>
                <HBox.margin>
-                  <Insets left="5.0" />
+                  <Insets left="15.0" />
                </HBox.margin>
             </VBox>
          </children>
          <VBox.margin>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
          </VBox.margin>
       </HBox>
+      <TabPane fx:id="bottomTabPane" maxWidth="1.7976931348623157E308" minHeight="40.0" prefHeight="0.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+            <Tab closable="false" disable="true" style="-fx-size: 30;">
+               <content>
+                  <AnchorPane disable="true" minHeight="0.0" minWidth="0.0" prefHeight="120.0" />
+               </content>
+            </Tab>
+          <Tab fx:id="findTab" closable="false" text="查找">
+            <content>
+              <AnchorPane maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <TableView fx:id="dataTable" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" HBox.hgrow="ALWAYS">
+                          <columns>
+                              <TableColumn fx:id="findtab" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="150.0" resizable="false" text="TYPE" />
+                            <TableColumn maxWidth="1.7976931348623157E308" minWidth="200.0" prefWidth="350.0" resizable="false" text="KEY" />
+                            <TableColumn maxWidth="-1.0" minWidth="500.0" prefWidth="-1.0" text="FIELD/VALUE" />
+                          </columns>
+                           <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                        </TableView>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+          <Tab fx:id="consoleTab" closable="false" text="控制台">
+            <content>
+              <AnchorPane maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <TextArea fx:id="consoleTextArea" editable="false" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+        </tabs>
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+      </TabPane>
    </children>
    <opaqueInsets>
       <Insets />

@@ -6,6 +6,7 @@ import zx.design.Main;
 import zx.model.RedisBean;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -48,4 +49,25 @@ public class JedisFactory {
         return jedis;
     }
 
+    /**
+     * 释放所有的redis连接
+     */
+    public static void destroyAllRedis(){
+        Iterator<String> keys = jedisMap.keySet().iterator();
+        while(keys.hasNext()){
+            destroyRedis(keys.next());
+        }
+    }
+
+    /**
+     * 释放指定的redis连接
+     * @param id
+     */
+    public static void destroyRedis(String id){
+        Jedis jedis = jedisMap.get(id);
+        if(jedis != null) {
+            jedis.close();
+        }
+        jedisMap.put(id,null);
+    }
 }

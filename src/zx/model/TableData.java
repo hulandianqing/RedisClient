@@ -19,8 +19,18 @@ public class TableData {
     }
 
     public TableData(String key, String field) {
+        this(null,key,field,null);
+    }
+
+    public TableData(String key, String field, String value) {
+        this(null,key,field,value);
+    }
+
+    public TableData(RedisType type, String key, String field, String value) {
+        this.type = type;
         this.setKey(key);
         this.setField(field);
+        this.setValue(value);
     }
 
     RedisType type = null;

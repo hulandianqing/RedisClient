@@ -1,24 +1,27 @@
 package zx.model;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
+import zx.application.ContextMenuType;
+import zx.model.base.Base;
 
 /**
- * 功能描述：
+ * 功能描述：redis实例
  * 时间：2016/3/27 14:51
  *
  * @author ：zhaokuiqiang
  */
-public class RedisBean{
+public class RedisBean extends Base{
     private String id;
     public String ip;
     public int port;
     public String name;
     public String password;
 
-    public RedisBean(){}
+    public RedisBean(){
+        this(null,0,null,null);
+    }
 
     public RedisBean(String ip, int port, String name, String password) {
+        setMenuType(ContextMenuType.SERVER);
         this.ip = ip;
         this.port = port;
         this.name = name;

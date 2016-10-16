@@ -1,20 +1,20 @@
 package zx.util;
 
-import com.datalook.gain.jedis.command.common.CommandDBSize;
-import com.datalook.gain.jedis.command.executor.CommandExecutor;
-import com.datalook.gain.jedis.command.executor.Executor;
-import com.datalook.gain.jedis.result.JedisResult;
 import com.datalook.gain.util.ValidateUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import zx.application.FindDataForm;
 import zx.constant.Constant;
 import zx.design.Main;
-import zx.jedis.JedisFactory;
+import zx.model.BottomTab;
 import zx.model.RedisBean;
 import zx.model.RedisDB;
 import zx.model.TableData;
@@ -56,20 +56,23 @@ public class DesignUtil {
         }
         rootItem.setExpanded(true);
         //清除reis db的选中
-        Main.redisDB.setIndex(null);
+        Main.redisDB = new RedisDB();
+        //释放redis连接
+        JedisUtil.destroyAllRedis();
         clearTabPane();
-        clearTableView();
+//        clearTableView();
         clearListView();
         TextField textField = (TextField) Main.root.lookup("#showKeys");
         textField.setText("");
         textField = (TextField) Main.root.lookup("#showFields");
         textField.setText("");
+
     }
 
     /**
      * 刷新redis数据table
      */
-    public static void refreshTable(){
+    /*public static void refreshTable(){
         if(Main.redisDB.getIndex() != null){
             clearTableView();
             ObservableList<TableData> list = DesignUtil.showSelectDBData(Main.redisDB.getId(),Main.redisDB.getIndex());
@@ -77,7 +80,7 @@ public class DesignUtil {
         }else{
             Main.dialog.show("未选中redis");
         }
-    }
+    }*/
 
     /**
      * 刷新下面的数据
@@ -126,9 +129,9 @@ public class DesignUtil {
     /**
      * 清除table数据
      */
-    public static void clearTableView(){
-        //清除tableview
-        Main.tableView.getItems().clear();
+    public static void clearFindTable(){
+        //清除findtable
+        Main.findTable.getItems().clear();
     }
 
     /**
@@ -163,7 +166,7 @@ public class DesignUtil {
             int db = Integer.parseInt(databases);
             List<TreeItem<Object>> treeItems = new ArrayList<>();
             for(int i = 0; i < db; i++) {
-                treeItems.add(new TreeItem<>(new RedisDB(databases,i,Constant.DB + i)));
+                treeItems.add(new TreeItem<>(new RedisDB(redisBean.getId(),i,Constant.DB + i)));
             }
             return treeItems;
         }catch(RuntimeException e){
@@ -171,17 +174,6 @@ public class DesignUtil {
             Main.dialog.show(String.format("连接%s失败",redisBean.getName()));
             return null;
         }
-    }
-
-    /**
-     * 显示选中的数据
-     */
-    public static ObservableList showSelectDBData(String id,int index){
-        ObservableList<TableData> datas = FXCollections.observableArrayList();
-//        JedisUtil.getAllString(id,index);
-        List<TableData> allList = JedisUtil.getAllKeyValue(id,index);
-        datas.addAll(allList);
-        return datas;
     }
 
     /**
@@ -261,7 +253,7 @@ public class DesignUtil {
         if(Main.redisServer.getScene() == null){
             scene = new Scene(Main.redisServer);
         }else{
-             scene = Main.redisServer.getScene();
+            scene = Main.redisServer.getScene();
         }
         showWindow(scene,redisBean,"修改redis",Modality.APPLICATION_MODAL);
     }
@@ -347,5 +339,167 @@ public class DesignUtil {
             }
         }
 
+    }
+
+    /**
+     * 创建menuitem
+     * @param text
+     * @param event
+     * @return
+     */
+    public static MenuItem newMenuItem(String text,javafx.event.EventHandler<javafx.event.ActionEvent> event){
+        MenuItem addTreeMenu = new MenuItem(text);
+        addTreeMenu.setOnAction(event);
+        return addTreeMenu;
+    }
+
+    /**
+     * 生成tree的redisserver右键菜单
+     * @return
+     */
+    public static ContextMenu getContextMenuRedisServer(){
+        if(ValidateUtils.isEmpty(Main.ContextMenu_RedisServer)){
+            Main.ContextMenu_RedisServer = new ContextMenu();
+            MenuItem addTreeMenu = DesignUtil.newMenuItem("添加",event -> DesignUtil.addRedisServer());
+            MenuItem editTreeMenu = DesignUtil.newMenuItem("编辑",event ->  {
+                Object data = ((MenuItem)event.getSource()).getParentPopup().getUserData();
+                if(data == null){
+                    Main.dialog.show("请选择要编辑的redis");
+                    return;
+                }
+                DesignUtil.editRedisServer((RedisBean) data);});
+            MenuItem deleteTreeMenu = DesignUtil.newMenuItem("删除",event -> {
+                Object data = ((MenuItem)event.getSource()).getParentPopup().getUserData();
+                if(data == null){
+                    Main.dialog.show("请选择要删除的redis");
+                    return;
+                }
+                DesignUtil.deleteRedisServer((RedisBean) data);});
+            MenuItem refreshTreeMenu = DesignUtil.newMenuItem("刷新",event -> DesignUtil.refreshTree());
+            Main.ContextMenu_RedisServer.getItems().addAll(addTreeMenu,editTreeMenu,deleteTreeMenu,refreshTreeMenu);
+        }
+        return Main.ContextMenu_RedisServer;
+    }
+
+    /**
+     * 生成tree的redisdb右键菜单
+     * @return
+     */
+    public static ContextMenu getContextMenuRedisDB(){
+        if(ValidateUtils.isEmpty(Main.ContextMenu_RedisDB)){
+            Main.ContextMenu_RedisDB = new ContextMenu();
+            MenuItem findTreeMenu = DesignUtil.newMenuItem("查找",event -> DesignUtil.showFindStage());
+            Main.ContextMenu_RedisDB.getItems().addAll(findTreeMenu);
+        }
+        return Main.ContextMenu_RedisDB;
+    }
+
+    /**
+     * 显示查询的数据
+     */
+    public static void showFindData(TableData tableData){
+        clearFindTable();
+        ObservableList<TableData> datas = FXCollections.observableArrayList();
+        if(tableData.getType() == RedisType.HASH){
+            ArrayList<TableData> list = (ArrayList<TableData>) tableData.getFields();
+            datas.addAll(list);
+        }else{
+            datas.add(tableData);
+        }
+        Main.findTable.setItems(datas);
+        bottomPaneSelect(1);
+    }
+
+    public static void bottomPaneSelect(int index){
+        Main.bottomTabPane.getSelectionModel().select(1);
+        changeBottomTab(false);
+    }
+
+    /**
+     * bottom tab显示隐藏
+     * @param isChangeVisiable 是否需要变更显示状态
+     */
+    public static void changeBottomTab(boolean isChangeVisiable){
+        if(Main.bottomTabPane.getSelectionModel().getSelectedIndex() == 0){
+            return;
+        }
+        Tab tab = Main.bottomTabPane.getSelectionModel().getSelectedItem();
+        BottomTab bottomTab = (BottomTab) Main.bottomTabPane.getUserData();
+        if(bottomTab == null) bottomTab = new BottomTab();
+        Tab oldTab = bottomTab.getTab();
+        if(!bottomTab.isTarget()){
+            if(tab == oldTab && isChangeVisiable){
+                DesignUtil.changeBottomPaneVisiable(false);
+                bottomTab.setTab(Main.bottomTabPane.getSelectionModel().getSelectedItem());
+            }else{
+                DesignUtil.changeBottomPaneVisiable(true);
+                bottomTab.setTab(tab);
+            }
+        }else{
+            bottomTab.setTarget(false);
+        }
+        Main.bottomTabPane.setUserData(bottomTab);
+    }
+
+    /**
+     * 更改下面工具栏的显示状态
+     * @param isShow
+     */
+    public static void changeBottomPaneVisiable(boolean isShow){
+        if(isShow){
+            Main.bottomTabPane.setPrefHeight(750);
+        }else{
+            Main.bottomTabPane.getSelectionModel().select(0);
+            Main.bottomTabPane.setPrefHeight(150);
+        }
+    }
+
+    /**
+     * 显示查询的pane
+     * @return
+     */
+    public static void showFindStage(){
+        TextField valueField = (TextField) Main.dataServer.lookup("#valueField");
+        valueField.setDisable(true);
+        TextField fieldField = (TextField) Main.dataServer.lookup("#fieldField");
+        fieldField.setDisable(true);
+        Main.dataServer.lookup("#keyField").requestFocus();
+        Stage stage = DesignUtil.newStage(Main.dataServer,"查询",Modality.APPLICATION_MODAL);
+        stage.getScene().setUserData(new FindDataForm());
+        stage.show();
+    }
+
+    /**
+     * 显示添加数据的pane
+     * @return
+     */
+    public static void showAddDataStage(){
+        TextField valueField = (TextField) Main.dataServer.lookup("#valueField");
+        valueField.setDisable(false);
+        TextField fieldField = (TextField) Main.dataServer.lookup("#fieldField");
+        fieldField.setDisable(false);
+        Stage stage = DesignUtil.newStage(Main.dataServer,"添加数据",Modality.APPLICATION_MODAL);
+        stage.getScene().setUserData(new FindDataForm());
+        stage.show();
+    }
+
+    /**
+     * 创建窗体
+     * @param parent
+     * @param title
+     * @param modality
+     */
+    public static Stage newStage(Parent parent,String title,Modality modality){
+        Stage stage = new Stage();
+        stage.setUserData(new RedisBean());
+        Scene scene = parent.getScene();
+        if(scene == null){
+            scene = new Scene(parent);
+        }
+        stage.setScene(scene);
+        stage.setTitle(title);
+        stage.initModality(modality);
+        stage.getIcons().add(Constant.ICONIMG);
+        return stage;
     }
 }

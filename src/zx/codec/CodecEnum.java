@@ -1,8 +1,8 @@
 package zx.codec;
 
-import com.datalook.gain.model.AccountProto;
+//import com.datalook.gain.model.AccountProto;
 import com.datalook.gain.model.RedisProto;
-import com.datalook.gain.util.AccountProtoUtil;
+//import com.datalook.gain.util.AccountProtoUtil;
 import com.datalook.gain.util.ProtobufUtil;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -15,11 +15,13 @@ public enum CodecEnum implements Codec{
 
     ACCOUNT{
         public String decode(byte[] source) throws InvalidProtocolBufferException {
-            return AccountProtoUtil.decode(source).toString();
+//            return AccountProtoUtil.decode(source).toString();
+            return null;
         }
 
         public byte[] encode(Object source) {
-            return AccountProtoUtil.encode((AccountProto.Account) source);
+//            return AccountProtoUtil.encode((AccountProto.Account) source);
+            return null;
         }
     },
     ADDMONEY{

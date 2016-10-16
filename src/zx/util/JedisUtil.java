@@ -20,6 +20,7 @@ import zx.design.Main;
 import zx.jedis.JedisFactory;
 import zx.model.TableData;
 import zx.redis.RedisType;
+import zx.redis.command.ExecutorProxy;
 import zx.redis.command.config.Config_Get;
 
 import java.util.*;
@@ -44,7 +45,7 @@ public class JedisUtil {
      * @return
      */
     public static HashSet<String> getAllKey(String id,int index){
-        Executor executor = getExecutor(id);
+        Executor executor = getExecutor(id,false);
         JedisResult jedisResult = executor.addCommand(new CommandSelect(index)).execute().getResult();
         if(!Constant.REDIS_OK.equals(jedisResult.getResult().toString())){
             return new HashSet<>();
@@ -67,7 +68,7 @@ public class JedisUtil {
             List<String> stringKeys = new ArrayList<>();
             while(iterator.hasNext()){
                 String key = iterator.next();
-                String type = getKeyType(getExecutor(id),key);
+                String type = getKeyType(getExecutor(id,false),key);
                 if(Constant.REDIS_HASH.equals(type)){
                     hashKeys.add(new TableData(key));
                 }else if(Constant.REDIS_STRING.equals(type)){
@@ -140,7 +141,7 @@ public class JedisUtil {
         if(keys == null || keys.length == 0){
             return new ArrayList<>();
         }
-        Executor executor = getExecutor(id);
+        Executor executor = getExecutor(id,false);
         JedisResult jedisResult = executor.addCommands(new CommandMGet(keys)).execute().getResult();
         return (List<String>) jedisResult.getResult();
     }
@@ -154,7 +155,7 @@ public class JedisUtil {
         if(dataList == null || dataList.size() == 0){
             return rsList;
         }
-        Executor executor = getExecutorMulti(id);
+        Executor executor = getExecutor(id,true);
         for(int i = 0; i < dataList.size(); i++) {
             // 改为获取hash的field
 //            executor.addCommands(new CommandHashGetAll(keys.get(i)));
@@ -184,7 +185,7 @@ public class JedisUtil {
      * @return
      */
     public static RedisType getKeyType(String id, String key){
-        return RedisType.valueOf(getKeyType(getExecutor(id),key).toUpperCase());
+        return RedisType.valueOf(getKeyType(getExecutor(id,false),key).toUpperCase());
     }
 
     /**
@@ -197,7 +198,7 @@ public class JedisUtil {
     }
 
     public static String getHashValue(String id,String key,String field){
-        Executor executor = getExecutor(id);
+        Executor executor = getExecutor(id,false);
         JedisResult jedisResult = executor.addCommand(new CommandHashGet(key,field)).execute().getResult();
         if(jedisResult.getResult() != null){
             return CodecUtil.decode((byte[]) jedisResult.getResult());
@@ -214,14 +215,17 @@ public class JedisUtil {
      */
     public static TableData getValueSet(String id,TableData tableData){
         if(ValidateUtils.isEmpty(id) || ValidateUtils.isEmpty(tableData.getKey())){
-            tableData.setValue("操作失败，key："+ tableData.getKey());
-            return tableData;
+            tableData.setValue("查询失败key:" + String.valueOf(tableData.getKey()));
+            throw new NullPointerException("查询失败无效的key");
         }
-        Executor executor = getExecutor(id);
+        Executor executor = getExecutor(id,false);
         JedisResult jedisResult;
         jedisResult = executor.addCommand(new CommandGet(tableData.getKey())).execute().getResult();
         tableData.setValue(handlerJedisResult(jedisResult));
-        tableData.setSource(SafeEncoder.encode((byte[]) jedisResult.getResult()));
+        if(jedisResult.getResult() == null){
+        }else{
+            tableData.setSource(SafeEncoder.encode((byte[]) jedisResult.getResult()));
+        }
         return tableData;
     }
 
@@ -233,10 +237,10 @@ public class JedisUtil {
      */
     public static TableData getValueHash(String id,TableData tableData){
         if(ValidateUtils.isEmpty(id) || ValidateUtils.isEmpty(tableData.getKey()) || ValidateUtils.isEmpty(tableData.getField())){
-            tableData.setValue("操作失败，key："+ tableData.getKey() + " field:"+tableData.getField());
-            return tableData;
+            tableData.setValue("操作失败，key："+ String.valueOf(tableData.getKey()) + " field:"+String.valueOf(tableData.getField()));
+            throw new NullPointerException(tableData.getValue());
         }
-        Executor executor = getExecutor(id);
+        Executor executor = getExecutor(id,false);
         JedisResult jedisResult;
         jedisResult = executor.addCommand(new CommandHashGet(tableData.getKey(),tableData.getField())).execute().getResult();
         tableData.setValue(handlerJedisResult(jedisResult));
@@ -266,7 +270,7 @@ public class JedisUtil {
         if(ValidateUtils.isEmpty(key) || ValidateUtils.isEmpty(value)){
             return false;
         }
-        Executor executor = getExecutor(Main.redisDB.getId());
+        Executor executor = getExecutor(Main.redisDB.getId(),false);
         try {
             executor.addCommand(new CommandSet(key,value)).execute();
         }catch(RuntimeException e){
@@ -289,7 +293,7 @@ public class JedisUtil {
                  || ValidateUtils.isEmpty(value)){
             return false;
         }
-        Executor executor = getExecutor(Main.redisDB.getId());
+        Executor executor = getExecutor(Main.redisDB.getId(),false);
         try {
             executor.addCommand(new CommandHashSet(key,field,value)).execute();
         }catch(RuntimeException e){
@@ -305,9 +309,10 @@ public class JedisUtil {
      */
     public static boolean selectDB(int index){
         try {
-            getExecutor(Main.redisDB.getId()).addCommand(new CommandSelect(index)).execute();
+            getExecutor(Main.redisDB.getId(),false).addCommand(new CommandSelect(index)).execute();
             return true;
         } catch(Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -322,17 +327,18 @@ public class JedisUtil {
         return String.valueOf(jedisResult.getResult().get(1));
     }
 
-    public static Executor getExecutorMulti(String id){
-        Executor executor = new CommandMultiExecutor(JedisFactory.getJedis(id));
-        if(Main.redisDB.getIndex() != null)
-            executor.addCommand(new CommandSelect(Main.redisDB.getIndex()));
-        return executor;
+    public static void destroyAllRedis(){
+        JedisFactory.destroyAllRedis();
     }
-    public static Executor getExecutor(String id){
-        Executor executor = new CommandExecutor(JedisFactory.getJedis(id));
-        if(Main.redisDB.getIndex() != null)
-            executor.addCommand(new CommandSelect(Main.redisDB.getIndex()));
-        return executor;
+
+    public static void destroyRedis(String id){
+        JedisFactory.destroyRedis(id);
+    }
+
+    public static Executor getExecutor(String id,boolean isMulti){
+//        if(Main.redisDB.getIndex() != null)
+//            executor.addCommand(new CommandSelect(Main.redisDB.getIndex()));
+        return new ExecutorProxy(id,isMulti);
     }
 
 }

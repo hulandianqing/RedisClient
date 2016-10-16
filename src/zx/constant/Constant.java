@@ -2,6 +2,7 @@ package zx.constant;
 
 import javafx.scene.image.Image;
 import zx.design.Main;
+import zx.property.PropertyUtil;
 
 import java.io.File;
 
@@ -16,7 +17,8 @@ public class Constant {
     /**
      * 配置文件路径
      */
-    public final static String PROPERTYPATH = System.getProperty("user.dir") + File.separator + "Redis.properties";
+    public final static String PROPERTYPATH = System.getProperty("user.dir") + File.separator + "runtime" + File.separator + "Redis.properties";
+//    public final static String PROPERTYPATH = PropertyUtil.class.getResource("").getPath() + "Redis.properties";
 
     public final static String NAME = "name";
     public final static String PASSWORD = "password";
@@ -25,11 +27,13 @@ public class Constant {
 
     public final static String MAXID = "maxid";
 
+    public final static String RESOURCE = "file:"+System.getProperty("user.dir") +
+            File.separator + "runtime"+File.separator+"resource" + File.separator;
+
     /**
      * 系统icon
      */
-    public final static Image ICONIMG = new Image("file:"+System.getProperty("user.dir") +
-            File.separator + "resource" + File.separator + "icon.png");
+    public final static Image ICONIMG = new Image(RESOURCE + "icon.png");
 
     /**
      * tree显示的db

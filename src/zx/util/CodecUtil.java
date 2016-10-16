@@ -13,6 +13,17 @@ import zx.codec.DefaultDecode;
  */
 public class CodecUtil {
 
+    public static String decode(Object source){
+        if(source == null){
+            return "null";
+        }
+        if(source instanceof String){
+            return source.toString();
+        }else{
+            return decode((byte)source);
+        }
+    }
+
     /**
      * 尝试解码
      * @param source

@@ -4,9 +4,12 @@ import com.datalook.gain.util.ValidateUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
+import zx.application.DataForm;
 import zx.constant.Constant;
 import zx.design.Main;
 import zx.model.RedisBean;
+import zx.model.TableData;
+import zx.redis.RedisType;
 import zx.util.DesignUtil;
 import zx.util.JedisUtil;
 
@@ -114,16 +117,12 @@ public class ServerController {
         String key,field,value;
         String type = (String) typeChoice.getSelectionModel().getSelectedItem();
         key = keyField.getText();
+        field = fieldField.getText();
         value = valueField.getText();
-        boolean flag = false;
-        if(Constant.REDIS_HASH.equals(type)){
-            field = fieldField.getText();
-            flag = JedisUtil.saveData(key,field,value);
-        }else if(Constant.REDIS_STRING.equals(type)){
-            flag = JedisUtil.saveData(key,value);
-        }
+        TableData tableData = new TableData(RedisType.valueOf(type.toUpperCase()),key,field,value);
+        boolean flag = (boolean) ((DataForm)keyField.getScene().getUserData()).execute(tableData);
         if(!flag){
-            Main.dialog.show("保存失败");
+            Main.dialog.show("操作失败");
         }else{
             keyField.getScene().getWindow().hide();
         }

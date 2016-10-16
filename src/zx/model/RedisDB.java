@@ -1,30 +1,32 @@
 package zx.model;
 
+import zx.application.ContextMenuType;
+import zx.model.base.Base;
 /**
- * 功能描述：
+ * 功能描述：db的pojo
  * 时间：2016/3/28 19:43
  *
  * @author ：zhaokuiqiang
  */
-public class RedisDB {
+public class RedisDB extends Base{
     String id;
     Integer index;
     String text;
 
     public RedisDB(){
-
+        this(null,null,null);
     }
 
     public RedisDB(String id) {
-        this.id = id;
+        this(id,null,null);
     }
 
     public RedisDB(String id, Integer index) {
-        this.id = id;
-        this.index = index;
+        this(id,index,null);
     }
 
     public RedisDB(String id, Integer index, String text) {
+        setMenuType(ContextMenuType.DB);
         this.id = id;
         this.text = text;
         this.index = index;

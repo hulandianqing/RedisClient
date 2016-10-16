@@ -64,7 +64,7 @@ public class MainController {
                         TableData tableData = new TableData();
                         tableData.setKey(keys[i]);
                         tableData.setField(field);
-                        JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).execute(tableData);
+                        JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).query(tableData);
                         dataList.add(tableData);
                     }
                 }else{
@@ -75,7 +75,7 @@ public class MainController {
                             TableData tableData = new TableData();
                             tableData.setKey(key);
                             tableData.setField(fields[i]);
-                            JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).execute(tableData);
+                            JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).query(tableData);
                             dataList.add(tableData);
                         }
                     }
