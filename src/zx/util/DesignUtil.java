@@ -401,8 +401,12 @@ public class DesignUtil {
         clearFindTable();
         ObservableList<TableData> datas = FXCollections.observableArrayList();
         if(tableData.getType() == RedisType.HASH){
-            ArrayList<TableData> list = (ArrayList<TableData>) tableData.getFields();
-            datas.addAll(list);
+            if(tableData.getFields() == null){
+                datas.addAll(tableData);
+            }else{
+                ArrayList<TableData> list = (ArrayList<TableData>) tableData.getFields();
+                datas.addAll(list);
+            }
         }else{
             datas.add(tableData);
         }
@@ -459,11 +463,17 @@ public class DesignUtil {
      * @return
      */
     public static void showFindStage(){
+        ChoiceBox choiceBox = (ChoiceBox)Main.dataServer.lookup("#typeChoice");
+        choiceBox.getSelectionModel().select(0);
         TextField valueField = (TextField) Main.dataServer.lookup("#valueField");
         valueField.setDisable(true);
+        valueField.setText("");
         TextField fieldField = (TextField) Main.dataServer.lookup("#fieldField");
         fieldField.setDisable(true);
-        Main.dataServer.lookup("#keyField").requestFocus();
+        fieldField.setText("");
+        TextField keyField = (TextField) Main.dataServer.lookup("#keyField");
+        keyField.setText("");
+        keyField.requestFocus();
         Stage stage = DesignUtil.newStage(Main.dataServer,"查询",Modality.APPLICATION_MODAL);
         stage.getScene().setUserData(new FindDataForm());
         stage.show();

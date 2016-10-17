@@ -59,7 +59,7 @@ public class JedisUtil {
      * 获取所有类型是string的value
      * @return
      */
-    public static List<TableData> getAllKeyValue(String id, int index){
+    /*public static List<TableData> getAllKeyValue(String id, int index){
         List<TableData> result = new ArrayList<>();
         HashSet<String> set = getAllKey(id,index);
         if(set.size() > 0){
@@ -115,7 +115,7 @@ public class JedisUtil {
 //                    sourceData.add(user);
 //                    tableData.setSource(sourceData);
                     //不显示value
-                    /*sb.append("value:");
+                    *//*sb.append("value:");
                     try {
                         RedisProto.User user = CODEC.decode(maps.get(hashFiels));
                         sb.append("{").append(TextFormat.printToUnicodeString(user).replace("\n","")).append("}");
@@ -123,7 +123,7 @@ public class JedisUtil {
                     } catch(InvalidProtocolBufferException e) {
                         sb.append(DefaultDecode.DEFAULT.decode(maps.get(hashFiels)));
                         tableData.setSource(DefaultDecode.DEFAULT.decode(maps.get(hashFiels)));
-                    }*/
+                    }*//*
                 }
                 CURRENTKEYFIELDS.put(tableData.getKey(),observableList);
                 tableData.setValue(sb.toString());
@@ -131,7 +131,7 @@ public class JedisUtil {
             }
         }
         return result;
-    }
+    }*/
 
     /**
      * 获取所有类型是string的value
@@ -150,34 +150,31 @@ public class JedisUtil {
      * 获取所有类型是string的value
      * @return
      */
-    public static List<List<TableData>> getAllHash(String id, List<TableData> dataList){
-        List<List<TableData>> rsList = new ArrayList<>();
-        if(dataList == null || dataList.size() == 0){
+    public static List<TableData> getAllHash(String id, TableData tableData){
+        List<TableData> rsList = new ArrayList<>();
+        if(tableData == null || tableData.getKey() == null){
             return rsList;
         }
         Executor executor = getExecutor(id,true);
-        for(int i = 0; i < dataList.size(); i++) {
-            // 改为获取hash的field
+        // 改为获取hash的field
 //            executor.addCommands(new CommandHashGetAll(keys.get(i)));
-            executor.addCommands(new CommandHashKeys(dataList.get(i).getKey()));
-        }
+        executor.addCommands(new CommandHashKeys(tableData.getKey()));
         JedisResult jedisResult = executor.execute().getResult();
         Response<List<Set<byte[]>>> result = (Response<List<Set<byte[]>>>) jedisResult.getResult();
-        List<Set<byte[]>> setList = result.get();
+
+        /*List<Set<byte[]>> setList = result.get();
         for(int i = 0; i < setList.size(); i++) {
             Iterator<byte[]> iterator = setList.get(i).iterator();
-            List<TableData> tempList = new ArrayList<>();
             while(iterator.hasNext()){
                 String field = DefaultDecode.DEFAULT.decode(iterator.next());
                 TableData data = new TableData();
-                data.setKey(dataList.get(i).getKey());
+                data.setKey(tableData.getKey());
                 data.setField(field);
-                data.setType(dataList.get(i).getType());
-                tempList.add(data);
+                data.setType(tableData.getType());
+                rsList.add(data);
             }
-            rsList.add(tempList);
-        }
-        return rsList;
+        }*/
+        return CodecUtil.decode(tableData,result.get());
     }
 
     /**

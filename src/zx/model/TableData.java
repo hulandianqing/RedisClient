@@ -4,6 +4,8 @@ import javafx.beans.property.SimpleStringProperty;
 import zx.constant.Constant;
 import zx.redis.RedisType;
 
+import java.util.List;
+
 /**
  * 功能描述：redis数据
  * 时间：2016/3/28 19:43
@@ -108,6 +110,21 @@ public class TableData {
                     " key:'" + key.get() + '\'' +
                 ",value:'" + value.get() + '\'' +
                 '}';
+        }else if(Constant.REDIS_HASH.equals(type)){
+            if(fields != null){
+                StringBuilder sb = new StringBuilder();
+                List<TableData> tempList = (List<TableData>)fields;
+                for(int i = 0; i < tempList.size(); i++) {
+                    sb.append(tempList.get(i).toString());
+                }
+                return sb.toString();
+            }else{
+                return "{" +
+                "key:'" + key.get() + '\'' +
+                        ",field:'" + field.get() +"'"+
+                ",value:'" + value.get() + '\'' +
+                '}';
+            }
         }
         return "{" +
                 "key:'" + key.get() + '\'' +

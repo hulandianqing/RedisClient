@@ -27,6 +27,7 @@ import zx.model.RedisBean;
 import zx.model.RedisDB;
 import zx.model.TableData;
 import zx.redis.RedisContext;
+import zx.redis.RedisType;
 import zx.util.DesignUtil;
 import zx.util.JedisUtil;
 
@@ -67,7 +68,7 @@ public class Main extends Application {
 
     public static TabPane bottomTabPane;
     public static TableView findTable;
-    static final String [] FINDTABLECOLUMN = new String[]{"type","key","value"};
+    static final String [] FINDTABLECOLUMN = new String[]{"type","key","field","value"};
     public static TextArea consoleTextArea;
 
     public static void main(String[] args) {
@@ -128,37 +129,29 @@ public class Main extends Application {
             @Override
             public TableRow call(TableView param) {
                 TableRow<TableData> tableRow = new TableRow<>();
-                tableRow.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        TableData tableData = tableRow.getItem();
-                        if(tableData == null){
-                            return;
-                        }
-                        ListView listView = (ListView) root.lookup("#fieldListView");
-                        listView.getItems().clear();
-                        //设置key text
-                        TextField textField = (TextField) root.lookup("#showKeys");
-                        textField.setText(tableData.getKey());
-                        //设置field text
-                        textField = (TextField) root.lookup("#showFields");
-                        if(tableData.getType().equals(Constant.REDIS_HASH)){
-                            textField.setText(tableData.getValue());
-                        }else{
-                            textField.setText("");
-                        }
-                        //如果是hash显示field、value
-                        if(Constant.REDIS_HASH.equals(tableData.getType())){
-                            //绑定list数据
-                            listView.getItems().addAll(JedisUtil.CURRENTKEYFIELDS.get(tableData));
-                            //显示hash
-                            DesignUtil.showHashUI(true);
-                        }else{
-                            //隐藏hash组件
-                            DesignUtil.showHashUI(false);
-                            DesignUtil.createTab(tableData.getKey(),tableData.getValue());
-                        }
-
+                tableRow.setOnMouseClicked(event -> {
+                    TableData tableData = tableRow.getItem();
+                    if(tableData == null){
+                        return;
+                    }
+                    ListView listView = (ListView) root.lookup("#fieldListView");
+                    listView.getItems().clear();
+                    //设置key text
+                    TextField textField = (TextField) root.lookup("#showKeys");
+                    textField.setText(tableData.getKey());
+                    //设置field text
+                    textField = (TextField) root.lookup("#showFields");
+                    if(tableData.getType() == RedisType.HASH){
+                        textField.setText(tableData.getField());
+                    }else{
+                        textField.setText("");
+                    }
+                    //如果是hash显示field、value
+                    if(Constant.REDIS_HASH.equals(tableData.getType())){
+                        //绑定list数据
+                        listView.getItems().addAll(JedisUtil.CURRENTKEYFIELDS.get(tableData));
+                    }else{
+                        DesignUtil.createTab(tableData.getKey(),tableData.getValue());
                     }
                 });
                 return tableRow;

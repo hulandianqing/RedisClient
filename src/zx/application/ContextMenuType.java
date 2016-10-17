@@ -1,6 +1,7 @@
 package zx.application;
 
 import javafx.scene.control.ContextMenu;
+import zx.design.Main;
 import zx.util.DesignUtil;
 
 /**

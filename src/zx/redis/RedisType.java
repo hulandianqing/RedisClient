@@ -45,10 +45,8 @@ public enum RedisType {
         @Override
         public TableData query0(TableData data) {
             if(ValidateUtils.isEmpty(data.getField())){
-                List<TableData> keyList = new ArrayList<>();
-                keyList.add(data);
-                List<List<TableData>> tempList = JedisUtil.getAllHash(Main.redisDB.getId(),keyList);
-                data.setFields(tempList.get(0));
+                List<TableData> tempList = JedisUtil.getAllHash(Main.redisDB.getId(),data);
+                data.setFields(tempList);
                 return data;
             }else{
                 return JedisUtil.getValueHash(Main.redisDB.getId(),data);
