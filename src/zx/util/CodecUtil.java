@@ -1,6 +1,7 @@
 package zx.util;
 
 import com.datalook.gain.jedis.result.JedisResult;
+import com.datalook.gain.util.ValidateUtils;
 import com.google.protobuf.InvalidProtocolBufferException;
 import redis.clients.jedis.Response;
 import zx.codec.Codec;
@@ -74,6 +75,9 @@ public class CodecUtil {
         for(CodecEnum codec : codecs) {
             try {
                 result = codec.decode(source);
+				if(ValidateUtils.isEmpty(result)){
+					continue;
+				}
                 break;
             } catch(InvalidProtocolBufferException e) {
             } catch(RuntimeException e){
@@ -108,4 +112,16 @@ public class CodecUtil {
         return codec.encode(source);
     }
 
+	/**
+	 * 功能描述：判断是否包含乱码
+	 * @return
+	 */
+	private static boolean hasErrorChar(String text){
+		if(!ValidateUtils.isEmpty(text)){
+			if(text.indexOf("�") >= 0){
+				return true;
+			}
+		}
+		return false;
+	}
 }

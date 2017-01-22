@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
+import javafx.geometry.Side;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -45,7 +46,9 @@ public class Main extends Application {
 
     final static public RedisContext CONTEXT = new RedisContext();
     final static Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+    public static StackPane mainView;
     public static VBox root;
+    public static Pane stackPane;
     public static Dialog dialog;
     //左侧的redis树
     public static TreeView<Object> treeView;
@@ -78,27 +81,31 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        root = FXMLLoader.load(getClass().getResource("main.fxml"));
-        findComponent();
-        initDialog();
-        initContentBounds();
-        //初始化组件
-        initRedisiTree(treeView);
-        initListView();
-        initDataServer();
-        initBottomTabPane();
-        initDataTable();
-        //初始化窗体
-        Scene scene = new Scene(root, 0, 0);
-        stage.setX(primaryScreenBounds.getMinX());
-        stage.setY(primaryScreenBounds.getMinY());
-        stage.setWidth(primaryScreenBounds.getWidth());
-        stage.setHeight(primaryScreenBounds.getHeight());
-        stage.setTitle("Redis客户端");
-        stage.setMaximized(true);
-        stage.getIcons().add(Constant.ICONIMG);
-        stage.setScene(scene);
-        stage.show();
+        mainView = new StackPane();
+        stackPane = FXMLLoader.load(getClass().getResource("bottom.fxml"));
+		root = FXMLLoader.load(getClass().getResource("main.fxml"));
+		findComponent();
+		initDialog();
+		initContentBounds();
+		//初始化组件
+		initRedisiTree(treeView);
+		initListView();
+		initDataServer();
+		initBottomTabPane();
+		initDataTable();
+		mainView.getChildren().add(stackPane);
+		mainView.getChildren().add(root);
+		//初始化窗体
+		Scene scene = new Scene(mainView, 0, 0);
+		stage.setX(primaryScreenBounds.getMinX());
+		stage.setY(primaryScreenBounds.getMinY());
+		stage.setWidth(primaryScreenBounds.getWidth());
+		stage.setHeight(primaryScreenBounds.getHeight());
+		stage.setTitle("Redis客户端");
+		stage.setMaximized(true);
+		stage.getIcons().add(Constant.ICONIMG);
+		stage.setScene(scene);
+		stage.show();
     }
 
     public void findComponent() throws IOException {
@@ -108,9 +115,16 @@ public class Main extends Application {
         //server页面
         redisServer = FXMLLoader.load(Main.class.getResource("server.fxml"));
         dataServer = FXMLLoader.load(Main.class.getResource("data.fxml"));
-        findTable = (TableView) root.lookup("#dataTable");
+        findTable = (TableView) stackPane.lookup("#dataTable");
         consoleTextArea = (TextArea) root.lookup("#consoleTextArea");
     }
+
+	/**
+	 * 功能描述：初始化浮动块
+	 */
+	public void initStackPane(){
+		stackPane.setVisible(false);
+	}
 
     /**
      * 初始化组件的大小
@@ -147,12 +161,10 @@ public class Main extends Application {
                         textField.setText("");
                     }
                     //如果是hash显示field、value
-                    if(Constant.REDIS_HASH.equals(tableData.getType())){
-                        //绑定list数据
-                        listView.getItems().addAll(JedisUtil.CURRENTKEYFIELDS.get(tableData));
-                    }else{
-                        DesignUtil.createTab(tableData.getKey(),tableData.getValue());
-                    }
+					if(ValidateUtils.isEmpty(tableData.getValue())){
+						tableData.getType().query(tableData);
+					}
+					DesignUtil.createTab(tableData.getKey(),tableData.getValue());
                 });
                 return tableRow;
             }

@@ -52,36 +52,12 @@ public class MainController {
         field = textField.getText();
         try {
             if(!ValidateUtils.isEmpty(key)){
-                List<TableData> dataList = new ArrayList<>();
-                String [] keys = key.split(";");
-                if(keys.length > 1 || ValidateUtils.isEmpty(field)){
-                    //按key查询多条string记录
-                    if(!ValidateUtils.isEmpty(field) && field.indexOf(Constant.SEPARATE) > 0){
-                        Main.dialog.show("key或field不能同时查询多条");
-                        return;
-                    }
-                    for(int i = 0; i < keys.length; i++) {
-                        TableData tableData = new TableData();
-                        tableData.setKey(keys[i]);
-                        tableData.setField(field);
-                        JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).query(tableData);
-                        dataList.add(tableData);
-                    }
-                }else{
-                    if(!ValidateUtils.isEmpty(field)){
-                        //按field查询hash
-                        String [] fields = field.split(Constant.SEPARATE);
-                        for(int i = 0; i < fields.length; i++) {
-                            TableData tableData = new TableData();
-                            tableData.setKey(key);
-                            tableData.setField(fields[i]);
-                            JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).query(tableData);
-                            dataList.add(tableData);
-                        }
-                    }
-                }
-                DesignUtil.refreshShowData(dataList);
-            }else{
+				TableData tableData = new TableData();
+				tableData.setKey(key);
+				tableData.setField(field);
+				JedisUtil.getKeyType(Main.redisDB.getId(),tableData.getKey()).query(tableData);
+				DesignUtil.showFindData(tableData);
+			}else{
                 Main.dialog.show("无效的key");
             }
         } catch(Exception e) {

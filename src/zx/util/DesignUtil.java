@@ -398,6 +398,15 @@ public class DesignUtil {
      * 显示查询的数据
      */
     public static void showFindData(TableData tableData){
+    	//如果value不为空则证明已经查询出结果
+    	if(!ValidateUtils.isEmpty(tableData.getValue())){
+    		String key = tableData.getKey();
+    		if(!ValidateUtils.isEmpty(tableData.getField())){
+    			key += "-" + tableData.getField();
+			}
+    		DesignUtil.createTab(key,tableData.getValue());
+			return;
+		}
         clearFindTable();
         ObservableList<TableData> datas = FXCollections.observableArrayList();
         if(tableData.getType() == RedisType.HASH){
@@ -451,7 +460,7 @@ public class DesignUtil {
      */
     public static void changeBottomPaneVisiable(boolean isShow){
         if(isShow){
-            Main.bottomTabPane.setPrefHeight(750);
+            Main.bottomTabPane.setPrefHeight(1050);
         }else{
             Main.bottomTabPane.getSelectionModel().select(0);
             Main.bottomTabPane.setPrefHeight(150);
