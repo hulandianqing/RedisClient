@@ -4,3 +4,12 @@
 .width{
     width: 500px;
 }
+.bottomToolBar{
+    -fx-background-color: #d9d9d9;
+}
+.buttonMinHover{
+    -fx-background-color: #6d6d6d;
+}
+.buttonMin{
+    -fx-background-color: #8d8d8d;
+}

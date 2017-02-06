@@ -1,5 +1,6 @@
 package zx.util;
 
+import com.sun.javafx.scene.control.skin.TextAreaSkin;
 import zx.design.Main;
 
 import java.text.SimpleDateFormat;
@@ -17,6 +18,7 @@ public class ConsoleUtil {
         console.append("时间:").append(sdf.format(System.currentTimeMillis())).append("\n");
         console.append(text);
         console.append("\n\n");
-        Main.consoleTextArea.setText(Main.consoleTextArea.getText() + console.toString());
+		Main.consoleTextArea.setText(console.toString() + Main.consoleTextArea.getText());
+
     }
 }

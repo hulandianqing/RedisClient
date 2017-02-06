@@ -23,16 +23,28 @@ public class CodecUtil {
         if(source == null){
             return "null";
         }
+        String result = "";
         if(source instanceof String){
-            return source.toString();
+            result = source.toString();
         }else if(source instanceof Response){
-            return decode(decode((Response<List<Set<byte[]>>>) source));
+            result = decode(decode((Response<List<Set<byte[]>>>) source));
         }else if(source instanceof Object[]){
             Object[] s = (Object[]) source;
-            return decode(decode((TableData) s[0],(List<Set<byte[]>>) s[1]));
+            result = decode(decode((TableData) s[0],(List<Set<byte[]>>) s[1]));
+        }else if(source instanceof List){
+        	result = decode((List) source);
+		}else if(source instanceof byte[]){
+            result = decode((byte[])source);
         }else{
-            return decode((byte[])source);
-        }
+		}
+		String finalResult = result;
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				ConsoleUtil.write("解码完成 ： "+finalResult);
+			}
+		}).start();
+		return result;
     }
 
     public static List<String> decode(Response<List<Set<byte[]>>> response){
@@ -97,7 +109,14 @@ public class CodecUtil {
         StringBuilder stringBuilder = new StringBuilder();
         for(int j = 0; j < lists.size(); j++) {
             Object obj = lists.get(j);
+			if(j != 0){
+				stringBuilder.append(",");
+			}
             stringBuilder.append(obj.toString());
+			if(stringBuilder.length() > 512){
+				stringBuilder.append("...");
+				return stringBuilder.toString();
+			}
         }
         return stringBuilder.toString();
     }

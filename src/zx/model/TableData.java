@@ -105,12 +105,12 @@ public class TableData {
 
     @Override
     public String toString() {
-        if(Constant.REDIS_STRING.equals(type)){
+        if(Constant.REDIS_STRING.equals(type.toString())){
             return "{" +
                     " key:'" + key.get() + '\'' +
                 ",value:'" + value.get() + '\'' +
                 '}';
-        }else if(Constant.REDIS_HASH.equals(type)){
+        }else if(Constant.REDIS_HASH.equals(type.toString())){
             if(fields != null){
                 StringBuilder sb = new StringBuilder();
                 List<TableData> tempList = (List<TableData>)fields;

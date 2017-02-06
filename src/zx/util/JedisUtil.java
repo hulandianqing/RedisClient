@@ -174,7 +174,9 @@ public class JedisUtil {
                 rsList.add(data);
             }
         }*/
-        return CodecUtil.decode(tableData,result.get());
+        List<TableData> tableDatas = CodecUtil.decode(tableData,result.get());
+        CodecUtil.decode((Object) tableDatas);
+        return tableDatas;
     }
 
     /**
@@ -198,7 +200,7 @@ public class JedisUtil {
         Executor executor = getExecutor(id,false);
         JedisResult jedisResult = executor.addCommand(new CommandHashGet(key,field)).execute().getResult();
         if(jedisResult.getResult() != null){
-            return CodecUtil.decode((byte[]) jedisResult.getResult());
+            return CodecUtil.decode(jedisResult.getResult());
         }else{
             return null;
         }
@@ -249,7 +251,7 @@ public class JedisUtil {
 
     public static String handlerJedisResult(JedisResult jedisResult){
         if(jedisResult.getResult() != null){
-            return CodecUtil.decode((byte[]) jedisResult.getResult());
+            return CodecUtil.decode(jedisResult.getResult());
         }else{
             return null;
         }

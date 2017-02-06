@@ -10,6 +10,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -34,7 +35,9 @@ import zx.util.JedisUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 功能描述：
@@ -48,7 +51,6 @@ public class Main extends Application {
     final static Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
     public static StackPane mainView;
     public static VBox root;
-    public static Pane stackPane;
     public static Dialog dialog;
     //左侧的redis树
     public static TreeView<Object> treeView;
@@ -82,7 +84,6 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         mainView = new StackPane();
-        stackPane = FXMLLoader.load(getClass().getResource("bottom.fxml"));
 		root = FXMLLoader.load(getClass().getResource("main.fxml"));
 		findComponent();
 		initDialog();
@@ -93,7 +94,6 @@ public class Main extends Application {
 		initDataServer();
 		initBottomTabPane();
 		initDataTable();
-		mainView.getChildren().add(stackPane);
 		mainView.getChildren().add(root);
 		//初始化窗体
 		Scene scene = new Scene(mainView, 0, 0);
@@ -115,16 +115,9 @@ public class Main extends Application {
         //server页面
         redisServer = FXMLLoader.load(Main.class.getResource("server.fxml"));
         dataServer = FXMLLoader.load(Main.class.getResource("data.fxml"));
-        findTable = (TableView) stackPane.lookup("#dataTable");
+        findTable = (TableView) root.lookup("#dataTable");
         consoleTextArea = (TextArea) root.lookup("#consoleTextArea");
     }
-
-	/**
-	 * 功能描述：初始化浮动块
-	 */
-	public void initStackPane(){
-		stackPane.setVisible(false);
-	}
 
     /**
      * 初始化组件的大小
@@ -231,7 +224,11 @@ public class Main extends Application {
                             if(tempBean != null && !ValidateUtils.isEmpty(tempBean.getId())){
                                 boolean isExpanded = cell.getTreeItem().isExpanded();
                                 treeCell.getTreeItem().getChildren().clear();
-                                treeCell.getTreeItem().getChildren().addAll(DesignUtil.createDBTreeItem(tempBean));
+								List<TreeItem<Object>> tempTreeItems = DesignUtil.createDBTreeItem(tempBean);
+								if(tempTreeItems == null){
+									return;
+								}
+                                treeCell.getTreeItem().getChildren().addAll(tempTreeItems);
                                 treeCell.getTreeItem().setExpanded(isExpanded);
                                 redisDB.setId(tempBean.getId());
                                 if(redisDB.getIndex() == null){
@@ -323,13 +320,25 @@ public class Main extends Application {
                 imageView.setFitWidth(15);
                 bottomTabPane.getTabs().get(i).setGraphic(imageView);
             }
-            AnchorPane anchorPane = (AnchorPane) bottomTabPane.getTabs().get(i).getContent();
-            anchorPane.setOnMousePressed(event -> {
-                BottomTab bottomTab = ((BottomTab)bottomTabPane.getUserData());
-                if(bottomTab != null){
-                    bottomTab.setTarget(true);
-                }
-            });
+            Object contentPane = bottomTabPane.getTabs().get(i).getContent();
+			if(contentPane != null){
+				if(contentPane instanceof AnchorPane){
+					//tab内容块
+					AnchorPane anchorPane = (AnchorPane) contentPane;
+					anchorPane.setOnMousePressed(event -> {
+						BottomTab bottomTab = ((BottomTab)bottomTabPane.getUserData());
+						if(bottomTab != null){
+							bottomTab.setTarget(true);
+						}
+					});
+					Node wapperTool = anchorPane.lookup("#wapperTool");
+					if(wapperTool != null){
+						if(wapperTool instanceof Pane){
+							((Pane) wapperTool).getChildren().add(0,DesignUtil.createToolBar(bottomTabPane.getTabs().get(i).getText(),true));
+						}
+					}
+				}
+			}
         }
     }
 

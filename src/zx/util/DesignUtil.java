@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -170,8 +171,7 @@ public class DesignUtil {
             }
             return treeItems;
         }catch(RuntimeException e){
-            e.printStackTrace();
-            Main.dialog.show(String.format("连接%s失败",redisBean.getName()));
+            Main.dialog.show(String.format("连接%s失败",redisBean.getName(),e.getMessage()));
             return null;
         }
     }
@@ -460,10 +460,10 @@ public class DesignUtil {
      */
     public static void changeBottomPaneVisiable(boolean isShow){
         if(isShow){
-            Main.bottomTabPane.setPrefHeight(1050);
+            Main.bottomTabPane.setPrefHeight(800);
         }else{
             Main.bottomTabPane.getSelectionModel().select(0);
-            Main.bottomTabPane.setPrefHeight(150);
+            Main.bottomTabPane.setPrefHeight(30);
         }
     }
 
@@ -521,4 +521,39 @@ public class DesignUtil {
         stage.getIcons().add(Constant.ICONIMG);
         return stage;
     }
+
+	/**
+	 * 创建提示工具条
+	 */
+	public static Node createToolBar(String title,boolean hasControl){
+		AnchorPane anchorPane = new AnchorPane();
+		anchorPane.setPrefHeight(23d);
+		anchorPane.setStyle("-fx-background-color: #d9d9d9");
+		//创建左侧lable
+		Label label = new Label(title);
+		AnchorPane.setLeftAnchor(label,20d);
+		AnchorPane.setTopAnchor(label,0d);
+		AnchorPane.setBottomAnchor(label,0d);
+		anchorPane.getChildren().add(label);
+		if(hasControl){
+			//创建button
+			AnchorPane buttonPane = new AnchorPane();
+			buttonPane.setPrefWidth(15d);
+			buttonPane.setPrefHeight(22d);
+			AnchorPane.setRightAnchor(buttonPane,10d);
+			Pane button = new Pane();
+			button.setPrefWidth(15d);
+			button.setPrefHeight(2.5d);
+			button.setStyle("-fx-background-color: #6d6d6d");
+			AnchorPane.setTopAnchor(button,10d);
+			AnchorPane.setLeftAnchor(button,0d);
+			AnchorPane.setRightAnchor(button,0d);
+			buttonPane.getChildren().add(button);
+			buttonPane.setOnMouseMoved(event -> button.setStyle("-fx-background-color: black"));
+			buttonPane.setOnMouseExited(event -> button.setStyle("-fx-background-color: #6d6d6d"));
+			buttonPane.setOnMouseClicked(event -> changeBottomTab(true));
+			anchorPane.getChildren().add(buttonPane);
+		}
+		return anchorPane;
+	}
 }

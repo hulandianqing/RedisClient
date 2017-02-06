@@ -99,14 +99,16 @@ public class ExecutorProxy extends Executor{
 
     @Override
     public void close() {
-        executor.close();
-    }
+    	String redisDetail = executor.getJedis().getClient().getHost() + ":" + executor.getJedis().getClient().getPort();
+		executor.close();
+		ConsoleUtil.write("关闭连接"+redisDetail);
+	}
 
     public void begin(){
 
     }
 
     public void end(){
-        ConsoleUtil.write(CodecUtil.decode(this.executor.getResult().getResult()));
+		ConsoleUtil.write("命令执行完成");
     }
 }
