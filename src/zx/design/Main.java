@@ -50,7 +50,9 @@ public class Main extends Application {
     final static public RedisContext CONTEXT = new RedisContext();
     final static Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
     public static StackPane mainView;
-    public static VBox root;
+    public static Pane root;
+    //上方右部内容
+    public static Pane contentPane;
     public static Dialog dialog;
     //左侧的redis树
     public static TreeView<Object> treeView;
@@ -109,9 +111,10 @@ public class Main extends Application {
     }
 
     public void findComponent() throws IOException {
-        treeView = (TreeView) root.lookup("#serverTree");
-        tabPane = (TabPane) root.lookup("#showHashTabPane");
-        listView = (ListView) root.lookup("#fieldListView");
+        treeView = (TreeView<Object>) ((SplitPane)root.getChildren().get(0)).getItems().get(0);
+        contentPane = (Pane) ((SplitPane)root.getChildren().get(0)).getItems().get(1);
+        tabPane = (TabPane) contentPane.lookup("#showHashTabPane");
+        listView = (ListView) contentPane.lookup("#fieldListView");
         //server页面
         redisServer = FXMLLoader.load(Main.class.getResource("server.fxml"));
         dataServer = FXMLLoader.load(Main.class.getResource("data.fxml"));
@@ -123,9 +126,10 @@ public class Main extends Application {
      * 初始化组件的大小
      */
     public void initContentBounds(){
-        HBox hBox = (HBox) root.lookup("#content");
-        hBox.setPrefWidth(primaryScreenBounds.getMaxX());
-        hBox.setPrefHeight(primaryScreenBounds.getMaxY());
+        SplitPane control = (SplitPane) root.lookup("#contentControll");
+        control.setPrefWidth(primaryScreenBounds.getMaxX());
+        control.setPrefHeight(primaryScreenBounds.getMaxY());
+//        control.setDividerPositions(0.3,0.7);
     }
 
     /**
@@ -141,13 +145,13 @@ public class Main extends Application {
                     if(tableData == null){
                         return;
                     }
-                    ListView listView = (ListView) root.lookup("#fieldListView");
+                    ListView listView = (ListView) contentPane.lookup("#fieldListView");
                     listView.getItems().clear();
                     //设置key text
-                    TextField textField = (TextField) root.lookup("#showKeys");
+                    TextField textField = (TextField) contentPane.lookup("#showKeys");
                     textField.setText(tableData.getKey());
                     //设置field text
-                    textField = (TextField) root.lookup("#showFields");
+                    textField = (TextField) contentPane.lookup("#showFields");
                     if(tableData.getType() == RedisType.HASH){
                         textField.setText(tableData.getField());
                     }else{
@@ -254,7 +258,7 @@ public class Main extends Application {
                         return;
                     }
                     String field = tableData.getField();
-                    TextField textField = (TextField) root.lookup("#showFields");
+                    TextField textField = (TextField) contentPane.lookup("#showFields");
                     textField.setText(field);
                     String value = JedisUtil.getHashValue(redisDB.getId(),tableData.getKey(),field);
                     if(!ValidateUtils.isEmpty(value)){

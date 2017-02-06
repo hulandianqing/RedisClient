@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.collections.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.web.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" stylesheets="@main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="zx.controller.MainController">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="noborder" stylesheets="@main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="zx.controller.MainController">
    <children>
-      <HBox fx:id="content" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
-         <children>
-            <TreeView id="serverTree" fx:id="serverTree" fixedCellSize="0.0" minWidth="200.0" prefHeight="513.0" prefWidth="242.0">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin></TreeView>
-            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+      <SplitPane fx:id="contentControll" dividerPositions="0.3" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+         <items>
+            <TreeView id="serverTree" fx:id="serverTree" fixedCellSize="0.0" maxWidth="800.0" minWidth="450.0" styleClass="noborder" />
+            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
                <children>
                   <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" VBox.vgrow="ALWAYS">
                      <children>
                         <HBox alignment="CENTER_LEFT">
                            <children>
-                              <Label alignment="CENTER" contentDisplay="BOTTOM" text="KEY：" />
+                              <Label alignment="CENTER" contentDisplay="BOTTOM" text="KEY：">
+                                 <HBox.margin>
+                                    <Insets left="10.0" />
+                                 </HBox.margin>
+                              </Label>
                               <TextField fx:id="showKeys" HBox.hgrow="ALWAYS" />
                               <Label fx:id="showHashFieldLable" maxWidth="35.0" minWidth="60.0" prefHeight="15.0" prefWidth="60.0" text="FIELD：">
                                  <HBox.margin>
                                     <Insets left="20.0" />
-                                 </HBox.margin></Label>
+                                 </HBox.margin>
+                              </Label>
                               <TextField fx:id="showFields" HBox.hgrow="ALWAYS" />
                               <VBox alignment="CENTER" prefWidth="230.0">
                                  <children>
@@ -33,21 +38,20 @@
                               </VBox>
                            </children>
                            <VBox.margin>
-                              <Insets bottom="5.0" top="5.0" />
+                              <Insets top="10.0" />
                            </VBox.margin>
                         </HBox>
                         <HBox spacing="10.0" VBox.vgrow="ALWAYS">
                            <children>
                               <VBox fx:id="showValuePane" cacheShape="false" minHeight="100.0" prefHeight="220.0" prefWidth="473.0" HBox.hgrow="ALWAYS">
                                  <children>
-                                    <Label text="VALUE" />
-                                    <TabPane fx:id="showHashTabPane" blendMode="RED" prefHeight="200.0" prefWidth="200.0" side="LEFT" tabClosingPolicy="ALL_TABS" VBox.vgrow="ALWAYS">
+                                    <TabPane fx:id="showHashTabPane" blendMode="RED" prefHeight="200.0" prefWidth="200.0" side="LEFT" styleClass="noborder" tabClosingPolicy="ALL_TABS" VBox.vgrow="ALWAYS">
                                        <tabs>
                                           <Tab closable="false" text="记录">
                                             <content>
                                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                                    <children>
-                                                      <TextArea layoutX="66.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                      <TextArea layoutX="66.0" prefHeight="200.0" prefWidth="200.0" styleClass="noborder" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                                    </children>
                                                 </AnchorPane>
                                             </content>
@@ -70,31 +74,25 @@
                      </children>
                   </VBox>
                </children>
-               <HBox.margin>
-                  <Insets left="15.0" />
-               </HBox.margin>
             </VBox>
-         </children>
-         <VBox.margin>
-            <Insets left="20.0" right="20.0" top="20.0" />
-         </VBox.margin>
-      </HBox>
-      <TabPane fx:id="bottomTabPane" maxWidth="1.7976931348623157E308" minHeight="30.0" prefHeight="0.0" side="BOTTOM" tabClosingPolicy="UNAVAILABLE">
+         </items>
+      </SplitPane>
+      <TabPane fx:id="bottomTabPane" maxWidth="1.7976931348623157E308" minHeight="38.0" prefHeight="0.0" side="BOTTOM" styleClass="noborder" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-            <Tab closable="false" disable="true" style="-fx-size: 50;">
+            <Tab closable="false" disable="true" style="-fx-size: 50; -fx-padding: 0; -fx-background-insets: 0;">
                <content>
-                  <AnchorPane disable="true" minHeight="0.0" minWidth="0.0" prefHeight="120.0" />
+                  <AnchorPane disable="true" minHeight="0.0" minWidth="0.0" prefHeight="120.0" styleClass="noborder" />
                </content>
             </Tab>
-          <Tab fx:id="findTab" closable="false" text="查找">
+          <Tab fx:id="findTab" closable="false" style="-fx-background-insets: 0;" text="查找">
             <content>
-              <AnchorPane maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
+              <AnchorPane maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" styleClass="noborder">
                      <children>
-                        <VBox id="wapperTool" prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <VBox id="wapperTool" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <TableView fx:id="dataTable" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+                              <TableView fx:id="dataTable" maxWidth="1.7976931348623157E308" styleClass="noborder" VBox.vgrow="ALWAYS">
                                 <columns>
-                                    <TableColumn fx:id="findtab" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="150.0" resizable="false" text="TYPE" />
+                                    <TableColumn fx:id="findtab" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="150.0" resizable="false" style="-fx-background-insets: 0;" text="TYPE" />
                                   <TableColumn maxWidth="1.7976931348623157E308" minWidth="200.0" prefWidth="350.0" resizable="false" text="KEY" />
                                     <TableColumn maxWidth="1.7976931348623157E308" minWidth="200.0" prefWidth="350.0" resizable="false" text="FIELD" />
                                   <TableColumn maxWidth="-1.0" minWidth="500.0" prefWidth="-1.0" text="VALUE" />
@@ -108,13 +106,13 @@
                      </children></AnchorPane>
             </content>
           </Tab>
-          <Tab fx:id="consoleTab" closable="false" text="控制台">
+          <Tab fx:id="consoleTab" closable="false" style="-fx-background-insets: 0;" text="控制台">
             <content>
               <AnchorPane maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0">
                      <children>
                         <VBox id="wapperTool" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <TextArea fx:id="consoleTextArea" editable="false" maxWidth="1.7976931348623157E308" wrapText="true" VBox.vgrow="ALWAYS" />
+                              <TextArea fx:id="consoleTextArea" editable="false" maxWidth="1.7976931348623157E308" styleClass="noborder" wrapText="true" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                      </children></AnchorPane>

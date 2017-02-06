@@ -63,9 +63,9 @@ public class DesignUtil {
         clearTabPane();
 //        clearTableView();
         clearListView();
-        TextField textField = (TextField) Main.root.lookup("#showKeys");
+        TextField textField = (TextField) Main.contentPane.lookup("#showKeys");
         textField.setText("");
-        textField = (TextField) Main.root.lookup("#showFields");
+        textField = (TextField) Main.contentPane.lookup("#showFields");
         textField.setText("");
 
     }
@@ -322,9 +322,9 @@ public class DesignUtil {
      * @param visible
      */
     public static void showHashUI(boolean visible){
-        VBox showHashField = (VBox) Main.root.lookup("#showHashField");
+        VBox showHashField = (VBox) Main.contentPane.lookup("#showHashField");
         showHashField.setVisible(visible);
-        Main.root.lookup("#showFields").setDisable(!visible);
+        Main.contentPane.lookup("#showFields").setDisable(!visible);
         if(!visible){
             if(showHashFieldWidth == 0){
                 showHashFieldWidth = showHashField.getWidth();
@@ -527,7 +527,8 @@ public class DesignUtil {
 	 */
 	public static Node createToolBar(String title,boolean hasControl){
 		AnchorPane anchorPane = new AnchorPane();
-		anchorPane.setPrefHeight(23d);
+		anchorPane.setPrefHeight(35d);
+        anchorPane.setMinHeight(35d);
 		anchorPane.setStyle("-fx-background-color: #d9d9d9");
 		//创建左侧lable
 		Label label = new Label(title);
@@ -539,7 +540,7 @@ public class DesignUtil {
 			//创建button
 			AnchorPane buttonPane = new AnchorPane();
 			buttonPane.setPrefWidth(15d);
-			buttonPane.setPrefHeight(22d);
+			buttonPane.setPrefHeight(30d);
 			AnchorPane.setRightAnchor(buttonPane,10d);
 			Pane button = new Pane();
 			button.setPrefWidth(15d);
